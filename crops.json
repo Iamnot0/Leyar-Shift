@@ -1,0 +1,160 @@
+{
+    "metadata": {
+        "team": "OptimusTechnica",
+        "challenge": "Field Shift: Adapting Farms with NASA Data",
+        "region_focus": "Myanmar Dry Zone & Semi-Arid Tropics",
+        "description": "Expanded database of all available and currently used crops for rotation modeling."
+    },
+    "crops": [
+        {
+            "id": "c_001",
+            "crop_name": "Sorghum",
+            "water_requirement_level": 1,
+            "nitrogen_impact": -1,
+            "root_depth": "Deep",
+            "economic_value": 2,
+            "heat_tolerance": 3,
+            "description": "Highly drought-resistant staple. Deep roots help break up compacted soil, but it depletes nitrogen."
+        },
+        {
+            "id": "c_002",
+            "crop_name": "Chickpeas (Gram)",
+            "water_requirement_level": 1,
+            "nitrogen_impact": 1,
+            "root_depth": "Shallow",
+            "economic_value": 2,
+            "heat_tolerance": 2,
+            "description": "Excellent nitrogen fixer. Requires minimal water, perfect for post-monsoon dry spells."
+        },
+        {
+            "id": "c_003",
+            "crop_name": "Groundnut (Peanut)",
+            "water_requirement_level": 2,
+            "nitrogen_impact": 1,
+            "root_depth": "Medium",
+            "economic_value": 3,
+            "heat_tolerance": 2,
+            "description": "A high-value cash crop that also restores nitrogen to the soil. Needs moderate, well-timed rain."
+        },
+        {
+            "id": "c_004",
+            "crop_name": "Pigeon Pea",
+            "water_requirement_level": 1,
+            "nitrogen_impact": 1,
+            "root_depth": "Deep",
+            "economic_value": 2,
+            "heat_tolerance": 3,
+            "description": "Deep taproot breaks up hardpan soil while fixing nitrogen. Extremely resilient to heat and drought."
+        },
+        {
+            "id": "c_005",
+            "crop_name": "Sesame",
+            "water_requirement_level": 1,
+            "nitrogen_impact": 0,
+            "root_depth": "Shallow",
+            "economic_value": 3,
+            "heat_tolerance": 3,
+            "description": "High-value cash crop with low water needs, but highly susceptible to waterlogging if heavy rains occur."
+        },
+        {
+            "id": "c_006",
+            "crop_name": "Cotton",
+            "water_requirement_level": 3,
+            "nitrogen_impact": -1,
+            "root_depth": "Deep",
+            "economic_value": 3,
+            "heat_tolerance": 3,
+            "description": "High economic value but severely depletes soil nutrients and requires significant water."
+        },
+        {
+            "id": "c_007",
+            "crop_name": "Dryland Rice",
+            "water_requirement_level": 3,
+            "nitrogen_impact": -1,
+            "root_depth": "Shallow",
+            "economic_value": 3,
+            "heat_tolerance": 2,
+            "description": "Traditional high-value crop, but very risky in shifting climates due to high water dependency."
+        },
+        {
+            "id": "c_008",
+            "crop_name": "Black Gram (Urad Bean)",
+            "water_requirement_level": 1,
+            "nitrogen_impact": 1,
+            "root_depth": "Medium",
+            "economic_value": 3,
+            "heat_tolerance": 2,
+            "description": "Major pulse in the region. Short duration crop, fixes nitrogen, and provides high export value."
+        },
+        {
+            "id": "c_009",
+            "crop_name": "Green Gram (Mung Bean)",
+            "water_requirement_level": 1,
+            "nitrogen_impact": 1,
+            "root_depth": "Medium",
+            "economic_value": 3,
+            "heat_tolerance": 3,
+            "description": "Fast-growing, heat-tolerant legume. Excellent for short-gap rotation to restore soil health."
+        },
+        {
+            "id": "c_010",
+            "crop_name": "Sunflower",
+            "water_requirement_level": 2,
+            "nitrogen_impact": -1,
+            "root_depth": "Deep",
+            "economic_value": 3,
+            "heat_tolerance": 2,
+            "description": "Valuable oilseed with a deep taproot that accesses subsoil moisture, but extracts high nutrients."
+        },
+        {
+            "id": "c_011",
+            "crop_name": "Maize (Corn)",
+            "water_requirement_level": 3,
+            "nitrogen_impact": -1,
+            "root_depth": "Medium",
+            "economic_value": 2,
+            "heat_tolerance": 2,
+            "description": "Heavy feeder that exhausts soil nitrogen quickly. High water demand makes it vulnerable to drought."
+        },
+        {
+            "id": "c_012",
+            "crop_name": "Pearl Millet",
+            "water_requirement_level": 1,
+            "nitrogen_impact": -1,
+            "root_depth": "Deep",
+            "economic_value": 1,
+            "heat_tolerance": 3,
+            "description": "One of the most drought-and-heat tolerant cereals available, ideal for worst-case dry seasons."
+        },
+        {
+            "id": "c_013",
+            "crop_name": "Mustard / Rapeseed",
+            "water_requirement_level": 2,
+            "nitrogen_impact": 0,
+            "root_depth": "Medium",
+            "economic_value": 2,
+            "heat_tolerance": 1,
+            "description": "Cool-season oilseed crop. Good for winter rotations, provides ground cover but does not fix N."
+        },
+        {
+            "id": "c_014",
+            "crop_name": "Cowpea",
+            "water_requirement_level": 1,
+            "nitrogen_impact": 1,
+            "root_depth": "Medium",
+            "economic_value": 2,
+            "heat_tolerance": 3,
+            "description": "Multi-purpose hardy legume. Suppresses weeds, fixes nitrogen, and serves as food or fodder."
+        },
+        {
+            "id": "c_015",
+            "crop_name": "Garlic / Onion",
+            "water_requirement_level": 2,
+            "nitrogen_impact": -1,
+            "root_depth": "Shallow",
+            "economic_value": 3,
+            "heat_tolerance": 1,
+            "description": "High cash value but very shallow roots. Best rotated with deep-rooted crops to utilize different soil layers."
+        }
+    ]
+}
