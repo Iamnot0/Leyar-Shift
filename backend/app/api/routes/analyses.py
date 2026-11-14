@@ -9,6 +9,7 @@ from fastapi.responses import JSONResponse
 
 from app.api.deps import get_context, problem, problem_from
 from app.api.jobs import JobStore
+from app.core import config
 from app.core.config import get_settings
 from app.modeling import analysis, reasoning
 from app.modeling.engine import AnalysisError
@@ -35,12 +36,21 @@ def create_analysis(body: models.AnalysisRequest, response: Response):
     return JSONResponse(job, status_code=202, headers={"Location": f"/v1/analyses/{job['analysis_id']}"})
 
 
+def finished(job: dict) -> bool:
+    """A finished result never changes for this engine, unless a source failed and is worth asking again."""
+    return job["status"] == "done" and not any(row["retryable"] for row in job["result"]["datasets"])
+
+
+def _kept(body: dict, job: dict) -> JSONResponse:
+    return JSONResponse(body, headers={"Cache-Control": config.CACHE_FINISHED} if finished(job) else {"Cache-Control": "no-store"})
+
+
 @router.get("/analyses/{analysis_id}")
 def get_analysis(analysis_id: str):
     job = get_store().read(analysis_id) if analysis_id.isalnum() else None
     if job is None:
         return problem(404, "not_found", "No such analysis", "No analysis has this id. Start one with POST /v1/analyses.")
-    return job
+    return _kept(job, job)
 
 
 @router.get("/analyses/{analysis_id}/zones")
@@ -52,7 +62,7 @@ def get_zones(analysis_id: str):
     zones = store.zones(analysis_id)
     if job["status"] != "done" or zones is None:
         return problem(409, "not_finished", "The analysis is not finished", f"This analysis is {job['status']}. Zones exist once it is done.")
-    return zones
+    return _kept(zones, job)
 
 
 @router.get("/analyses/{analysis_id}/reasoning")
@@ -63,4 +73,6 @@ def get_reasoning(analysis_id: str):
     if job["status"] != "done" or job["result"] is None:
         state = "ended with an error" if job["status"] == "error" else f"is {job['status']}"
         return problem(409, "not_finished", "The analysis is not finished", f"This analysis {state}. Its steps exist once it is done.")
-    return reasoning.build(job["result"], get_settings())
+    body = reasoning.build(job["result"], get_settings())
+    # A model that did not answer this time may answer later, so that summary is not kept.
+    return _kept(body, job) if body["summary"]["status"] != "failed" else JSONResponse(body, headers={"Cache-Control": "no-store"})

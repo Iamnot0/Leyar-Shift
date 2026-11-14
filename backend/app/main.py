@@ -61,10 +61,27 @@ def _limit_requests(app: FastAPI, per_minute: int, behind_proxy: bool) -> None:
         return await call_next(request)
 
 
+CACHED_PATHS = {"/v1/meta": config.CACHE_REFERENCE, "/v1/crops": config.CACHE_PLACE, "/v1/layers": config.CACHE_PLACE,
+                "/v1/briefing": config.CACHE_WEATHER, "/v1/outlook": config.CACHE_WEATHER}
+
+
+def _cache_reference_answers(app: FastAPI) -> None:
+    """Answers that are the same for everyone at a place may be kept by browsers and the CDN; nothing else is."""
+
+    @app.middleware("http")
+    async def cache_control(request: Request, call_next):
+        response = await call_next(request)
+        policy = CACHED_PATHS.get(request.url.path)
+        if request.method == "GET" and response.status_code == 200 and policy and "cache-control" not in response.headers:
+            response.headers["Cache-Control"] = policy
+        return response
+
+
 def create_app() -> FastAPI:
     app = FastAPI(title="Leyar Shift Rotation API", version=config.CONTRACT_VERSION, lifespan=_lifespan)
     # The published contract is the API description; it is served as written, never regenerated from code.
     app.openapi = contract  # type: ignore[method-assign]
+    _cache_reference_answers(app)
     _limit_requests(app, get_settings().rate_limit_per_minute, get_settings().behind_proxy)
     app.add_middleware(CORSMiddleware, allow_origins=list(get_settings().cors_origins), allow_methods=["GET", "POST"], allow_headers=["*"],
                        expose_headers=["Location"])

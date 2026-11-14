@@ -134,6 +134,12 @@ SUMMARY_MODEL = "openai/gpt-4o-mini"
 SUMMARY_TIMEOUT_S = 8.0
 
 # Real requests allowed to the metered sources, kept under what each account permits.
+# How long browsers and the CDN in front of the engine may keep a response. s-maxage lets the CDN answer from near the visitor.
+CACHE_REFERENCE = "public, max-age=300, s-maxage=86400"
+CACHE_PLACE = "public, max-age=3600, s-maxage=86400"
+CACHE_WEATHER = "public, max-age=600, s-maxage=3600"
+CACHE_FINISHED = "public, max-age=3600, s-maxage=86400"
+
 OPENET_REQUESTS_PER_MONTH = 90
 METEOMATICS_REQUESTS_PER_DAY = 900
 # Requests one client may make in a minute to the routes that fetch or compute. Polling a job and the health check are free.
