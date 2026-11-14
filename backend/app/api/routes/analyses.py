@@ -11,6 +11,7 @@ from app.api.deps import get_context, problem, problem_from
 from app.api.jobs import JobStore
 from app.core import config
 from app.core.config import get_settings
+from app.fusion.grid import FieldError, read_field
 from app.modeling import analysis, reasoning
 from app.modeling.engine import AnalysisError
 from app.schemas import models
@@ -24,10 +25,18 @@ def get_store() -> JobStore:
     return JobStore(settings.records, settings.inline_jobs)
 
 
+def field_longitude(geometry: dict) -> float | None:
+    """Where the field is decides its date; a geometry that cannot be read is refused later with the reason."""
+    try:
+        return read_field(geometry).centroid.x
+    except FieldError:
+        return None
+
+
 @router.post("/analyses", status_code=202)
 def create_analysis(body: models.AnalysisRequest, response: Response):
     request = body.model_dump(mode="json")
-    ctx = get_context()
+    ctx = get_context(field_longitude(request["field"]["geometry"]))
     try:
         analysis.check_request(request, ctx)
     except AnalysisError as error:

@@ -16,7 +16,10 @@ import { Card, CardState, Pill, type PillTone } from '../components/ui/kit';
 import { HEAT_WORDS, RAIN_WORDS } from '../content/copy';
 import { MONTHS } from '../lib/format';
 import { bestOf, byRank, shortName } from '../results/reading';
+import { photoCredit, photoKeys } from '../content/cropPhotos';
 import { CropIllustration } from './CropIllustration';
+
+const photoKeysOf = (items: { id: string }[]) => [...new Set(items.flatMap((item) => photoKeys(item.id).slice(0, 1)))];
 import { REAL_RAIN_MM, degrees } from './words';
 
 export type PredictionHorizon = 'week' | 'month' | 'year';
@@ -610,7 +613,8 @@ function pickSuggestedCrops(
         name: cleanName,
         badge,
         preferenceNote,
-        cardTraits: cardTraits.slice(0, 3),
+        // The badge already says it; the line under the name adds what it does not.
+        cardTraits: (cardTraits.some((trait) => trait !== badge.label) ? cardTraits.filter((trait) => trait !== badge.label) : cardTraits).slice(0, 3),
         whyFit: whyFit.slice(0, 3),
         timing,
         crop,
@@ -914,6 +918,7 @@ export function SuggestedCropsCard({
               </li>
             ))}
           </ul>
+          {photoKeysOf(items).length > 0 && <p className="caption crop-credit">{photoCredit(photoKeysOf(items))}</p>}
           <CropDetailDialog
             crop={selectedCrop}
             snapshot={snapshot}

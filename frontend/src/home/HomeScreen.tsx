@@ -183,9 +183,11 @@ function AdviceCard({
   actionLead: string;
   onChooseHorizon: (next: Horizon) => void;
 }) {
+  // "Best to sow" only heads a card that names a crop to sow.
+  const neutralPill = horizon === 'week' ? 'Sowing this week' : 'Planting this month';
   if (!advice.available) {
     return (
-      <AnswerCard className="narrow" pill={pill} headline="We can’t say yet" smallHeadline>
+      <AnswerCard className="narrow" pill={neutralPill} headline="We can’t say yet" smallHeadline>
         <p>{advice.why} Your best rotation for the year is ready.</p>
         <HorizonActions horizon={horizon} onChooseHorizon={onChooseHorizon} />
       </AnswerCard>
@@ -197,7 +199,7 @@ function AdviceCard({
   const headline =
     good.length > 0 ? good.map((crop) => crop.name).join(' and ') : hasHold ? 'Hold off seeding' : hasPrep ? 'Prepare to plant' : 'Out of sowing season';
   return (
-    <AnswerCard className="narrow" pill={pill} headline={headline} smallHeadline>
+    <AnswerCard className="narrow" pill={good.length > 0 ? pill : neutralPill} headline={headline} smallHeadline>
       <ul className="ranked">
         {advice.crops.map((crop) => (
           <li key={crop.name} className={crop.good ? 'ranked__best' : undefined}>
@@ -381,7 +383,7 @@ export function EmptyHomeScreen({ onOpenSetup }: { onOpenSetup: () => void }) {
         </div>
         <AnswerCard
           className="narrow"
-          pill={horizon === 'week' ? 'Best to sow this week' : horizon === 'month' ? 'Best to plant this month' : 'Best rotation for the year'}
+          pill={horizon === 'week' ? 'Sowing this week' : horizon === 'month' ? 'Planting this month' : 'Rotation for the year'}
           headline="No field set up yet"
           smallHeadline
         >

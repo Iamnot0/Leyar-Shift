@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { photoKeys, photoSrc } from '../content/cropPhotos';
 
 interface CropIllustrationProps {
   cropId: string;
@@ -177,6 +178,15 @@ function renderArtwork(key: string): ReactNode {
 }
 
 export function CropIllustration({ cropId, size = 'tile' }: CropIllustrationProps) {
+  // A real photo where there is one; the drawing stays for crops without one.
+  const [photo] = photoKeys(cropId);
+  if (photo) {
+    return (
+      <span className={`crop-pic crop-pic--${size} crop-pic--photo`} data-crop={photo} aria-hidden="true">
+        <img src={photoSrc(photo)} alt="" width={400} height={300} loading="lazy" decoding="async" />
+      </span>
+    );
+  }
   const key = normalizeCropKey(cropId);
   return (
     <span className={`crop-pic crop-pic--${size}`} data-crop={key} aria-hidden="true">

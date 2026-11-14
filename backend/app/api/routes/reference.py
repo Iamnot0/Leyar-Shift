@@ -30,19 +30,19 @@ def crop_history(body: models.CoverageRequest):
 
 @router.get("/crops")
 def crops(lat: float = Query(ge=-90, le=90), lon: float = Query(ge=-180, le=180)) -> dict:
-    return analysis.crop_list(lat, lon, get_context())
+    return analysis.crop_list(lat, lon, get_context(lon))
 
 
 @router.get("/layers")
 def layers(lat: float = Query(ge=-90, le=90), lon: float = Query(ge=-180, le=180)) -> dict:
-    return analysis.layers(lat, lon, get_context())
+    return analysis.layers(lat, lon, get_context(lon))
 
 
 @router.get("/outlook")
 def outlook(lat: float = Query(ge=-90, le=90), lon: float = Query(ge=-180, le=180)) -> dict:
-    return analysis.outlook(lat, lon, get_context())
+    return analysis.outlook(lat, lon, get_context(lon))
 
 
 @router.get("/briefing")
 def field_briefing(lat: float = Query(ge=-90, le=90), lon: float = Query(ge=-180, le=180)) -> dict:
-    return briefing.build(lat, lon, get_context())
+    return briefing.build(lat, lon, get_context(lon))

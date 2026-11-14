@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 
 from app.adapters.base import Allowance, Fetcher, FetchError, SourceState
+from app.core.clock import local_offset
 
 API = "https://api.meteomatics.com"
 PARAMETERS = ("t_max_2m_24h:C", "t_min_2m_24h:C", "precip_24h:mm", "prob_precip_24h:p", "dew_point_mean_2m_24h:C",
@@ -28,8 +29,7 @@ class ForecastDay:
 
 def _url(lon: float, lat: float, first: date, days: int) -> str:
     # Each value covers the 24 hours before its timestamp, so a local day is read at the next local midnight.
-    to_utc = timedelta(hours=round(lon / 15.0))
-    start = datetime.combine(first + timedelta(days=1), datetime.min.time()) - to_utc
+    start = datetime.combine(first + timedelta(days=1), datetime.min.time()) - local_offset(lon)
     end = start + timedelta(days=days - 1)
     return f"{API}/{start:%Y-%m-%dT%H:%M:%SZ}--{end:%Y-%m-%dT%H:%M:%SZ}:P1D/{','.join(PARAMETERS)}/{lat:.5f},{lon:.5f}/json"
 

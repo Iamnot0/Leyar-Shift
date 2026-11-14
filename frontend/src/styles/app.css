@@ -2767,6 +2767,28 @@ details.drawer[open] > summary::after {
   height: 44px;
 }
 
+.crop-pic--photo {
+  overflow: hidden;
+  padding: 0;
+  background: var(--track);
+}
+
+.crop-pic--photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.crop-pic--photo.crop-pic--tile {
+  width: 56px;
+  height: 56px;
+}
+
+.crop-credit {
+  margin-block-start: 12px;
+}
+
 .crop-pic--dialog {
   width: 56px;
   height: 56px;
@@ -3072,6 +3094,19 @@ details.drawer[open] > summary::after {
     width: 100%;
   }
 
+  /* The look-ahead switch keeps its three choices on one row. */
+  .section-head > .segmented__options {
+    display: grid;
+    grid-auto-columns: minmax(0, 1fr);
+    grid-auto-flow: column;
+    width: 100%;
+  }
+
+  .section-head > .segmented__options .segmented__button {
+    padding-inline: 6px;
+    white-space: nowrap;
+  }
+
   .strip {
     flex-direction: column;
     align-items: stretch;
@@ -3310,14 +3345,6 @@ details.drawer[open] > summary::after {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .header .header-nav {
-    grid-template-columns: minmax(0, 1fr);
-    border-radius: var(--radius-panel);
-  }
-
-  .header .header-nav__link {
-    border-radius: calc(var(--radius-panel) - 4px);
-  }
 
   .segmented:not([data-stack='always']) .segmented__options {
     flex-wrap: wrap;
@@ -3325,6 +3352,18 @@ details.drawer[open] > summary::after {
 
   .segmented:not([data-stack='always']) .segmented__option {
     flex: 1 1 auto;
+  }
+}
+
+/* Below 340px the two screen links no longer fit side by side. */
+@media (max-width: 339px) {
+  .header .header-nav {
+    grid-template-columns: minmax(0, 1fr);
+    border-radius: var(--radius-panel);
+  }
+
+  .header .header-nav__link {
+    border-radius: calc(var(--radius-panel) - 4px);
   }
 }
 
