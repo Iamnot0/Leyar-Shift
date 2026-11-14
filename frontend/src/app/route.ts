@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { SETUP_STEPS } from '../content/copy';
 
-export type Route = { screen: 'home'; explicit?: boolean } | { screen: 'results' } | { screen: 'setup'; step: number };
+export type Route = { screen: 'home' } | { screen: 'results' } | { screen: 'setup'; step: number };
 
 const STEP_COUNT = SETUP_STEPS.length;
 
@@ -12,7 +12,7 @@ function parse(hash: string): Route {
     const step = Number(detail);
     return { screen: 'setup', step: Number.isInteger(step) && step >= 1 && step <= STEP_COUNT ? step - 1 : 0 };
   }
-  return { screen: 'home', explicit: hash === '#/' || hash === '#/home' };
+  return { screen: 'home' };
 }
 
 export function hrefOf(route: Route): string {

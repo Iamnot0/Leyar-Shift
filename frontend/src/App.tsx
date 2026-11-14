@@ -1,3 +1,4 @@
+import { Analytics } from '@vercel/analytics/react';
 import { useEffect, useState } from 'react';
 import { connect, type Connection } from './api/source';
 import { MetaContext } from './app/context';
@@ -85,6 +86,7 @@ export default function App() {
           </main>
         </>
       )}
+      <Analytics mode="production" />
     </>
   );
 }

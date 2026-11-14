@@ -1,17 +1,16 @@
 import { useState } from 'react';
-import type { ApiClient, ApiError } from '../api/client';
+import type { ApiError } from '../api/client';
 import { useResolvedPlace } from '../api/places';
 import type { CoverageState, FieldPlan, RunState } from '../app/plan';
 import { centroid } from '../lib/geo';
 import type { RainfallScenario, Scenario, TemperatureScenario } from '../api/types';
 import { BackIcon, InfoIcon } from '../components/ui/Icons';
-import { AnswerCard, Card, CardState, Pill, Reminder } from '../components/ui/kit';
+import { AnswerCard, Card, CardState, Reminder } from '../components/ui/kit';
 import { Segmented } from '../components/ui/Segmented';
 import { HEAT_WORDS, RAIN_WORDS, REMINDER } from '../content/copy';
 import { WorkingState } from '../working/WorkingState';
 import { BestFitCard, MonthsCard, ScoresCard, SourceDetail, SourcesCard, SwitchCard } from './cards';
 import { FieldCard, type PictureProps } from './FieldCard';
-import { ReasoningCard } from './ReasoningCard';
 
 const COMPARISON_ID = 'comparison';
 const SOURCES_ID = 'every-source';
@@ -20,7 +19,6 @@ const RAIN_OPTIONS = (Object.keys(RAIN_WORDS) as RainfallScenario[]).map((value)
 const HEAT_OPTIONS = (Object.keys(HEAT_WORDS) as TemperatureScenario[]).map((value) => ({ value, label: HEAT_WORDS[value] }));
 
 interface ResultsScreenProps extends PictureProps {
-  client: ApiClient;
   field: FieldPlan;
   run: RunState;
   coverage: CoverageState;
@@ -76,11 +74,6 @@ export function EmptyResultsScreen({ onOpenSetup }: { onOpenSetup: () => void })
           </CardState>
         </Card>
       </div>
-      <Card title="How we worked this out" className="reasoning" aside={<Pill tone="neutral">Waiting for a field</Pill>}>
-        <CardState kind="empty" title="No comparison to trace yet">
-          Once a field is set up, open this panel to see our step-by-step calculation and full rotation comparison.
-        </CardState>
-      </Card>
       <Reminder />
     </>
   );
@@ -88,7 +81,7 @@ export function EmptyResultsScreen({ onOpenSetup }: { onOpenSetup: () => void })
 
 /** The full yearly comparison: the answer first, then why, then what could go wrong, then where it all comes from. */
 export function ResultsScreen(props: ResultsScreenProps) {
-  const { client, field, run, coverage, scenario, rotationConfirmed, weatherYears, onScenarioChange, onOpenSetup, onConfirmRotation, onRetry, ...picture } = props;
+  const { field, run, coverage, scenario, rotationConfirmed, weatherYears, onScenarioChange, onOpenSetup, onConfirmRotation, onRetry, ...picture } = props;
   const [detailOpen, setDetailOpen] = useState(false);
   const scenarioIsNormal = scenario.rainfall === 'normal' && scenario.temperature === 'normal';
   const [lon, lat] = centroid(field.geometry);
@@ -116,7 +109,6 @@ export function ResultsScreen(props: ResultsScreenProps) {
             <BestFitCard analysis={run.analysis} comparisonId={COMPARISON_ID} onChangePriorities={() => onOpenSetup(2)} />
             <FieldCard field={field} analysis={run.analysis} {...picture} />
           </div>
-          <ReasoningCard key={run.analysis.analysis_id} client={client} analysisId={run.analysis.analysis_id} datasets={run.analysis.datasets} />
           <section className="strip" aria-labelledby="kind-of-year">
             <div className="strip__body">
               <h2 id="kind-of-year" className="card__title card__title--small">

@@ -241,7 +241,7 @@ function YearAnswer({ run, onRetry, onChooseHorizon }: { run: RunState; onRetry:
       <AnswerCard className="narrow" pill={pill} headline="Working it out" smallHeadline>
         <p className="marked" role="status">
           <span className="spinner" aria-hidden="true" />
-          Working out the best rotation for your field…
+          Processing on the Field…
         </p>
         <div className="button-row">
           <a className="button button--on-deep" href="#/results">
@@ -356,12 +356,6 @@ export function EmptyHomeScreen({ onOpenSetup }: { onOpenSetup: () => void }) {
         </Card>
       </div>
 
-      <Card className="thinking-card" title="How we work out your advice" smallTitle aside={<Pill tone="neutral">Waiting for a field</Pill>}>
-        <CardState kind="empty" title="Step-by-step reasoning needs a field first" action={{ label: 'Set up your field', run: onOpenSetup }}>
-          Once you mark your field and rank what matters most to you, every step of our reasoning and the full rotation comparison will be shown here.
-        </CardState>
-      </Card>
-
       <section className="section-head" aria-labelledby="what-to-grow">
         <div className="section-head__title">
           <h2 id="what-to-grow" className="card__title">
@@ -466,17 +460,6 @@ export function HomeScreen({ client, plan, run, onRetry }: HomeScreenProps) {
         <RainCard rain={briefing.recentRain} />
         <SoilCard surface={briefing.soilSurface} rootZone={briefing.soilRootZone} loading={soilLoading} />
       </div>
-
-      {analysis && (
-        <div className="strip">
-          <p className="strip__body">
-            <strong>How we got to the best rotation.</strong> Every step our calculation took, and where each number comes from.
-          </p>
-          <a className="button" href="#/results">
-            See the steps
-          </a>
-        </div>
-      )}
 
       <section className="section-head" aria-labelledby="what-to-grow">
         <div className="section-head__title">

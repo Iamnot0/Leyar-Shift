@@ -193,7 +193,7 @@ export function Planner({ client, theme, notices, onThemeChange }: PlannerProps)
     setRun({ status: 'idle' });
     setSetupRound((round) => round + 1);
     setAnnouncement('Your field is removed. Mark a new field to start again.');
-    navigate({ screen: 'home', explicit: true });
+    navigate({ screen: 'home' });
   };
 
   const checkField = (next: FieldPlan) => {
@@ -225,8 +225,8 @@ export function Planner({ client, theme, notices, onThemeChange }: PlannerProps)
     return () => window.clearInterval(timer);
   }, [plan, settled, launch]);
 
-  // On initial load with no hash and no saved field, start at setup; explicit #/ or #/results opens the empty dashboard.
-  const screen = plan === null && route.screen === 'home' && !route.explicit ? 'setup' : route.screen;
+  // On initial load with no hash, default to the overview dashboard (home).
+  const screen = route.screen;
   const setupStep = route.screen === 'setup' ? route.step : 0;
   const shownScreen = useRef(screen);
 
@@ -315,7 +315,6 @@ export function Planner({ client, theme, notices, onThemeChange }: PlannerProps)
           )
         ) : plan ? (
           <ResultsScreen
-            client={client}
             field={plan.field}
             run={run}
             coverage={coverage}

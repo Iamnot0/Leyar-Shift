@@ -59,7 +59,7 @@ export function WorkingState({ field, stage, coverage, weatherYears, ...picture 
       <section className="card card--answer working" aria-labelledby="working-title">
         <div className="working__main">
           <h1 id="working-title" className="answer-headline answer-headline--small">
-            Working out the best rotation for your field
+            Processing on the Field
           </h1>
           <p className="secondary">Your results will appear here as soon as they are ready.</p>
           <div aria-live="polite">

@@ -416,20 +416,13 @@ svg {
 .row {
   display: flex;
   flex-wrap: wrap;
+  align-items: flex-start;
   gap: var(--space-gap);
-}
-
-.row--top {
-  align-items: stretch;
 }
 
 .row--top > .card--answer {
   display: flex;
   flex-direction: column;
-}
-
-.row--top > .card--answer > .button-row:last-child {
-  margin-block-start: auto;
 }
 
 /* In the column layout a badge would stretch to the card's width. */
@@ -1243,7 +1236,7 @@ details.drawer[open] > summary::after {
 
 .map--editor {
   aspect-ratio: auto;
-  height: clamp(300px, 62vw, 460px);
+  height: clamp(220px, 25vh, 240px);
 }
 
 .map-frame__fallback {
@@ -1858,17 +1851,42 @@ details.drawer[open] > summary::after {
 
 .address-form {
   display: grid;
-  gap: 12px;
+  gap: 8px;
 }
 
 .address-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  gap: 10px 12px;
 }
 
 .address-grid__wide {
   grid-column: 1 / -1;
+}
+
+@media (min-width: 960px) {
+  .page-head {
+    gap: 2px;
+    padding-block: 0;
+  }
+
+  .card {
+    gap: 14px;
+  }
+
+  .address-form .address-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px 12px;
+  }
+
+  .address-form .address-grid__wide {
+    grid-column: span 2;
+  }
+
+  .address-form .field {
+    align-content: end;
+    gap: 4px;
+  }
 }
 
 .field__head {
@@ -2505,7 +2523,7 @@ details.drawer[open] > summary::after {
 }
 
 .row--split {
-  align-items: stretch;
+  align-items: flex-start;
 }
 
 .home-stack {
@@ -2517,10 +2535,6 @@ details.drawer[open] > summary::after {
 
 .home-stack > .card {
   width: 100%;
-}
-
-.home-stack > .suggested-crops {
-  flex: 1 0 auto;
 }
 
 .crop-suggest-grid {
@@ -2901,8 +2915,8 @@ details.drawer[open] > summary::after {
 
   .card {
     gap: 14px;
-    padding: clamp(18px, 4.5vw, 24px);
-    border-radius: 22px;
+    padding: clamp(16px, 4vw, 22px);
+    border-radius: var(--radius-card);
   }
 
   .card__head {
@@ -3028,9 +3042,8 @@ details.drawer[open] > summary::after {
   .crop-dialog {
     width: calc(100vw - 16px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px));
     max-height: min(90vh, 90dvh, calc(100dvh - 16px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)));
-    border-radius: 22px;
+    border-radius: var(--radius-card);
   }
-
   .crop-dialog__head {
     gap: 12px;
   }
@@ -3044,64 +3057,6 @@ details.drawer[open] > summary::after {
   .crop-dialog__facts {
     grid-template-columns: minmax(0, 1fr);
   }
-}
-
-/* ---------------------------------------------------------------- how the result was reached */
-
-.reasoning__steps {
-  display: grid;
-  padding: 0;
-  list-style: none;
-}
-
-.reasoning__index {
-  flex: none;
-  min-inline-size: 1.5ch;
-  color: var(--text-2);
-  font-weight: 600;
-}
-
-.reasoning__group {
-  display: grid;
-  gap: 2px;
-}
-
-.reasoning__group + .reasoning__group {
-  margin-block-start: 10px;
-}
-
-.reasoning__fact {
-  display: grid;
-  gap: 4px;
-}
-
-.reasoning__source {
-  color: var(--text-2);
-  font-size: var(--size-min);
-}
-
-.reasoning__source code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 1em;
-}
-
-.reasoning__summary {
-  display: grid;
-  gap: 8px;
-  padding: 16px 18px;
-  border-radius: var(--radius-panel);
-  background: var(--ground);
-}
-
-.reasoning__summary details.drawer {
-  margin-block-start: 4px;
-}
-
-.reasoning__given {
-  display: grid;
-  gap: 6px;
-  padding-inline-start: 18px;
-  font-size: var(--size-caption);
 }
 
 @media (max-width: 380px) {
