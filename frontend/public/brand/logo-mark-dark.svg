@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="18 18 84 84" role="img" aria-label="Leyar Shift">
+  <path d="M64 56Q62 27 98 22Q94 52 64 56Z" fill="#F4B740"/>
+  <path d="M64 56Q62 27 98 22Q94 52 64 56Z" fill="#F3F5F0" transform="rotate(90 60 60)"/>
+  <path d="M64 56Q62 27 98 22Q94 52 64 56Z" fill="#7FA98F" transform="rotate(180 60 60)"/>
+  <path d="M64 56Q62 27 98 22Q94 52 64 56Z" fill="#B9D3C3" transform="rotate(270 60 60)"/>
+</svg>

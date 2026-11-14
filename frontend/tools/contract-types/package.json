@@ -1,0 +1,14 @@
+{
+  "name": "@field-shift/contract-types",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Generates the frontend's TypeScript types from backend/openapi.yaml. Kept as its own package because the generator needs TypeScript 5, while the app is checked with TypeScript 7.",
+  "scripts": {
+    "generate": "node generate.mjs"
+  },
+  "devDependencies": {
+    "openapi-typescript": "^7.13.0",
+    "typescript": "~5.8.3"
+  }
+}

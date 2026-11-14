@@ -1,0 +1,65 @@
+// Generated from design/tokens.json by scripts/build-tokens.mjs. Do not edit.
+export const themes = {
+  "light": {
+    "ground": "#F3F5F0",
+    "card": "#FFFFFF",
+    "border": "#E2E7DF",
+    "control-border": "#B9C4BA",
+    "ink": "#13231B",
+    "on-ink": "#FFFFFF",
+    "text-2": "#46554D",
+    "track": "#EEF1EB",
+    "green": "#1D6A46",
+    "on-green": "#FFFFFF",
+    "green-deep": "#123B2A",
+    "on-deep": "#FFFFFF",
+    "on-deep-2": "#D3E3D9",
+    "green-tint": "#E6EFE9",
+    "on-green-tint": "#123B2A",
+    "amber": "#F4B740",
+    "on-amber": "#13231B",
+    "amber-tint": "#FBE9C4",
+    "on-amber-tint": "#5A3D00",
+    "risk-high": "#B5490F",
+    "on-risk-high": "#FFFFFF",
+    "risk-some": "#F2C29C",
+    "alert": "#B5490F",
+    "water": "#2B6CB0",
+    "bar-neutral": "#8A978F",
+    "live": "#2E9B62",
+    "brand-word": "#123B2A"
+  },
+  "dark": {
+    "ground": "#22242D",
+    "card": "#2B2E3A",
+    "border": "#3E4354",
+    "control-border": "#7A8299",
+    "ink": "#F1F3F9",
+    "on-ink": "#181A22",
+    "text-2": "#B8BFD1",
+    "track": "#353948",
+    "green": "#47B881",
+    "on-green": "#151821",
+    "green-deep": "#174935",
+    "on-deep": "#FFFFFF",
+    "on-deep-2": "#D6E8DF",
+    "green-tint": "#1F3D32",
+    "on-green-tint": "#D6EFE2",
+    "amber": "#F4B740",
+    "on-amber": "#181A22",
+    "amber-tint": "#453616",
+    "on-amber-tint": "#FDECC8",
+    "risk-high": "#EB7A47",
+    "on-risk-high": "#181A22",
+    "risk-some": "#824E2D",
+    "alert": "#FF9E87",
+    "water": "#63A8EE",
+    "bar-neutral": "#959CB0",
+    "live": "#3AB87C",
+    "brand-word": "#F3F5F0"
+  }
+} as const;
+
+export type ThemeName = keyof typeof themes;
+export type ThemeColors = Record<keyof (typeof themes)['light'], string>;
+export const DEFAULT_THEME: ThemeName = 'light';

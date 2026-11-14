@@ -1,0 +1,2499 @@
+openapi: 3.1.0
+info:
+  title: Leyar Shift Rotation API
+  version: 0.3.7
+  summary: Compare crop-rotation strategies for one field using NASA Earth observations and local records.
+  description: |
+    Decision support for farmers. The API compares the current rotation with at least two alternatives
+    and returns scores, evidence, tradeoffs, risk and explicit uncertainty. It supports farmer and
+    agronomist judgment and does not replace it.
+
+    Rules that hold for every response:
+    - No value is invented. A value that cannot be computed is `null` with a `null_reason`.
+    - Every value states what kind of evidence it is (`evidence_kind`) and how it was obtained (`access_tier`).
+    - Modeled values carry a `low` / `high` range (10th to 90th percentile of the uncertainty runs).
+    - A failed or missing dataset never fails the whole analysis. See `datasets[]`.
+    - Coordinates are WGS84 longitude, latitude (GeoJSON order). Quantities are metric unless the
+      source reports otherwise, in which case the reported unit is kept and named in `unit`.
+servers:
+  - url: http://localhost:8000
+    description: Local development
+security: []
+tags:
+  - name: system
+  - name: reference
+  - name: analysis
+  - name: map
+
+paths:
+  /v1/health:
+    get:
+      tags: [system]
+      operationId: getHealth
+      summary: Liveness check
+      responses:
+        '200':
+          description: Service is up.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+
+  /v1/meta:
+    get:
+      tags: [reference]
+      operationId: getMeta
+      summary: Vocabulary, labels and scoring conventions
+      description: |
+        Single source for display labels and definitions. Clients read labels from here and do not
+        retype them: evidence kinds, access tiers, null reasons (including "No coverage"), the
+        needs-local-judgment flag, scores, hazards, risk levels, scenarios, job stages and the disclaimer.
+      responses:
+        '200':
+          description: Vocabulary.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Meta'
+
+  /v1/coverage:
+    post:
+      tags: [reference]
+      operationId: checkCoverage
+      summary: Which datasets cover this field
+      description: Fast check that fetches no heavy data. Use it before starting an analysis.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoverageRequest'
+      responses:
+        '200':
+          description: Per-dataset availability for the field.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Coverage'
+        '422':
+          $ref: '#/components/responses/Problem'
+        '429':
+          $ref: '#/components/responses/Problem'
+
+  /v1/crop-history:
+    post:
+      tags: [reference]
+      operationId: getCropHistory
+      summary: The rotation the crop map shows on this field
+      description: |
+        Reads the crop history for the field and proposes the current rotation, for the farmer to
+        confirm or correct before an analysis is started. The first call for a new field can take
+        up to a minute. Where no crop-history layer exists, `detected` is null with the reason.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoverageRequest'
+      responses:
+        '200':
+          description: The year-by-year crop history and the rotation read from it.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CropHistory'
+        '422':
+          $ref: '#/components/responses/Problem'
+        '429':
+          $ref: '#/components/responses/Problem'
+
+  /v1/crops:
+    get:
+      tags: [reference]
+      operationId: listCrops
+      summary: Crops the backend accepts at a location
+      description: |
+        The list the rotation entry form picks from. Includes `fallow` and one generic unspecified
+        cover crop. `suitable` is a climate screen only and is `null` where it cannot be judged.
+      parameters:
+        - $ref: '#/components/parameters/Lat'
+        - $ref: '#/components/parameters/Lon'
+      responses:
+        '200':
+          description: Accepted crops with suitability at the location.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CropList'
+        '422':
+          $ref: '#/components/responses/Problem'
+        '429':
+          $ref: '#/components/responses/Problem'
+
+  /v1/layers:
+    get:
+      tags: [map]
+      operationId: listLayers
+      summary: Pre-rendered context layers for the map
+      description: |
+        Raster tile layers for context only, sharpest picture first. Each is either a `picture` of
+        the ground or a `data` map of a measurement. They are pre-coloured and must not be used to
+        convey field risk. Field risk comes from `GET /v1/analyses/{analysis_id}/zones`, which
+        returns class indices that the client styles.
+      parameters:
+        - $ref: '#/components/parameters/Lat'
+        - $ref: '#/components/parameters/Lon'
+      responses:
+        '200':
+          description: Context layers available at the location.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LayerList'
+        '422':
+          $ref: '#/components/responses/Problem'
+        '429':
+          $ref: '#/components/responses/Problem'
+
+  /v1/outlook:
+    get:
+      tags: [reference]
+      operationId: getOutlook
+      summary: Weather forecast for the next ten days
+      description: |
+        A forecast, not a measurement and not an input to any analysis. Days are local days at the
+        location. When the forecast service is not set up or does not answer, `available` is false,
+        `days` is empty and `null_reason` says why.
+      parameters:
+        - $ref: '#/components/parameters/Lat'
+        - $ref: '#/components/parameters/Lon'
+      responses:
+        '200':
+          description: The outlook, or the reason there is none.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Outlook'
+        '422':
+          $ref: '#/components/responses/Problem'
+        '429':
+          $ref: '#/components/responses/Problem'
+
+  /v1/briefing:
+    get:
+      tags: [reference]
+      operationId: getBriefing
+      summary: Today on the field
+      description: |
+        Recent rain, soil wetness, the forecast, what next month usually brings and the long record,
+        for one point. Each part says whether it is available and, if not, why. None of it is an
+        input to an analysis. The first call for a place can take up to a minute.
+      parameters:
+        - $ref: '#/components/parameters/Lat'
+        - $ref: '#/components/parameters/Lon'
+      responses:
+        '200':
+          description: The briefing.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Briefing'
+        '422':
+          $ref: '#/components/responses/Problem'
+        '429':
+          $ref: '#/components/responses/Problem'
+
+  /v1/analyses:
+    post:
+      tags: [analysis]
+      operationId: createAnalysis
+      summary: Start an analysis
+      description: |
+        Returns immediately with a job. Poll `GET /v1/analyses/{analysis_id}` until `status` is
+        `done` or `error`. The same request body always produces the same result.
+
+        Outside the conterminous United States there is no crop-history layer, so
+        `farmer.current_rotation` is required there and its absence is a 422.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalysisRequest'
+      responses:
+        '202':
+          description: Job accepted.
+          headers:
+            Location:
+              description: URL of the job.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+        '422':
+          $ref: '#/components/responses/Problem'
+        '429':
+          $ref: '#/components/responses/Problem'
+
+  /v1/analyses/{analysis_id}:
+    get:
+      tags: [analysis]
+      operationId: getAnalysis
+      summary: Job status and, when done, the result
+      parameters:
+        - $ref: '#/components/parameters/AnalysisId'
+      responses:
+        '200':
+          description: Job state. `result` is present only when `status` is `done`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+        '404':
+          $ref: '#/components/responses/Problem'
+
+  /v1/analyses/{analysis_id}/zones:
+    get:
+      tags: [map]
+      operationId: getZones
+      summary: Risk zones for the field as vector polygons
+      description: |
+        One layer per hazard. Polygons follow the 30 m analysis grid and carry a class index (0 lower,
+        1 raised, 2 high) and the raw value where one exists. The client chooses colour and pattern.
+      parameters:
+        - $ref: '#/components/parameters/AnalysisId'
+      responses:
+        '200':
+          description: Zone layers.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ZoneLayers'
+        '404':
+          $ref: '#/components/responses/Problem'
+        '409':
+          description: The analysis is not finished.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /v1/analyses/{analysis_id}/reasoning:
+    get:
+      tags: [analysis]
+      operationId: getReasoning
+      summary: How the result was reached, step by step
+      description: |
+        The engine's own steps for a finished analysis, rebuilt from its result. Every number is a
+        value from the result, and each fact names the field it was read from. A language model never
+        computes anything here. Where one is set up, it is given the ranking facts and asked to word
+        them as the summary. Its reply is shown only when every number in it matches a fact and it
+        gives no advice; otherwise the engine's own summary is shown and `summary` says why. The reply
+        is kept, so the same analysis always shows the same summary.
+      parameters:
+        - $ref: '#/components/parameters/AnalysisId'
+      responses:
+        '200':
+          description: The steps and the summary.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reasoning'
+        '404':
+          $ref: '#/components/responses/Problem'
+        '409':
+          description: The analysis is not finished.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+components:
+  parameters:
+    Lat:
+      name: lat
+      in: query
+      required: true
+      schema:
+        type: number
+        minimum: -90
+        maximum: 90
+    Lon:
+      name: lon
+      in: query
+      required: true
+      schema:
+        type: number
+        minimum: -180
+        maximum: 180
+    AnalysisId:
+      name: analysis_id
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: '^[a-f0-9]{16,64}$'
+
+  responses:
+    Problem:
+      description: Request-level error (RFC 9457).
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+
+  schemas:
+    # ---------------------------------------------------------------- vocabulary
+    EvidenceKind:
+      type: string
+      description: What a value is. Drawn differently by the client.
+      enum: [satellite_observation, ground_observation, soil_survey_baseline, model_output]
+    AccessTier:
+      type: string
+      description: |
+        How the value was obtained. `live` was fetched from the source for this request. `snapshot`
+        comes from a dated, pre-ingested regional copy. `modeled` was computed by this system.
+      enum: [live, snapshot, modeled]
+    NullReason:
+      type: string
+      description: |
+        Why a value is missing. `out_of_coverage` is displayed as "No coverage". Only `fetch_failed`
+        is worth retrying.
+      enum: [out_of_coverage, not_configured, fetch_failed, insufficient_observations]
+    CoverageScope:
+      type: string
+      enum: [global, us_only, western_us]
+    DatasetStatus:
+      type: string
+      enum: [available, unavailable, failed]
+    ScoreId:
+      type: string
+      enum: [water_balance, soil_health, erosion, climate_risk, pest_break, economics]
+    Priority:
+      type: string
+      description: Farmer priority. Each maps to one score, in the same order as `ScoreId`.
+      enum: [conserve_water, build_soil, reduce_erosion, lower_weather_risk, break_pest_cycles, income]
+    WaterAvailability:
+      type: string
+      enum: [rain_fed, limited, reliable]
+    Equipment:
+      type: string
+      enum: [row_crop_planter, grain_drill, combine, forage_harvester, hay_equipment, specialty_harvester]
+    RainfallScenario:
+      type: string
+      enum: [normal, dry, very_dry]
+    TemperatureScenario:
+      type: string
+      enum: [normal, warm, hot]
+    ZoneHazard:
+      type: string
+      enum: [erosion, water_stress, heat, frost]
+    CalendarHazard:
+      type: string
+      enum: [frost, heat, dry_spell, extreme_rain, bare_field]
+    RiskLevel:
+      type: integer
+      description: 0 lower, 1 raised, 2 high. Thresholds are in `Meta.risk_levels`.
+      enum: [0, 1, 2]
+    CoverState:
+      type: string
+      description: |
+        `residue` is ground covered by stubble or mulch with nothing growing. It is not bare soil.
+      enum: [crop, cover_crop, residue, bare]
+    CropCategory:
+      type: string
+      enum: [cash, forage, cover, fallow]
+    JobStatus:
+      type: string
+      enum: [queued, running, done, error]
+    DetectionBasis:
+      type: string
+      description: |
+        `repeating_cycle`: the recent years repeat this sequence cleanly. `recent_years`: nothing
+        repeats cleanly, so the best-matching recent sequence is used and the farmer should check it.
+      enum: [repeating_cycle, recent_years]
+    CropFitStatus:
+      type: string
+      enum: [fits, strained, does_not_fit, unknown]
+    CropFitCheckId:
+      type: string
+      enum: [season_length, heat, frost, water]
+    LayerKind:
+      type: string
+      description: |
+        `picture` shows the ground as a camera would. `data` colours a measurement, such as soil
+        moisture, and needs its legend.
+      enum: [picture, data]
+
+    # ---------------------------------------------------------------- geometry
+    Position:
+      type: array
+      description: Longitude, latitude.
+      minItems: 2
+      maxItems: 2
+      items:
+        type: number
+    LinearRing:
+      type: array
+      minItems: 4
+      items:
+        $ref: '#/components/schemas/Position'
+    Polygon:
+      type: object
+      required: [type, coordinates]
+      properties:
+        type:
+          const: Polygon
+        coordinates:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/LinearRing'
+    MultiPolygon:
+      type: object
+      required: [type, coordinates]
+      properties:
+        type:
+          const: MultiPolygon
+        coordinates:
+          type: array
+          minItems: 1
+          items:
+            type: array
+            minItems: 1
+            items:
+              $ref: '#/components/schemas/LinearRing'
+    FieldGeometry:
+      description: Field boundary. Area must be between 0.5 and 2,000 hectares.
+      oneOf:
+        - $ref: '#/components/schemas/Polygon'
+        - $ref: '#/components/schemas/MultiPolygon'
+    LatLon:
+      type: object
+      required: [lat, lon]
+      properties:
+        lat:
+          type: number
+        lon:
+          type: number
+    Period:
+      type: object
+      required: [start, end]
+      properties:
+        start:
+          type: string
+          format: date
+        end:
+          type: string
+          format: date
+
+    # ---------------------------------------------------------------- the value envelope
+    Quantity:
+      type: object
+      description: |
+        One number with its provenance. When `value` is null, `null_reason` is set and the evidence
+        fields should be ignored. When `evidence_kind` is `model_output` and `value` is not null,
+        `low` and `high` are set.
+      required: [value, unit, low, high, evidence_kind, access_tier, dataset_ids, native_resolution_m,
+                 period, n_valid_obs, n_expected_obs, null_reason, null_explanation, retryable,
+                 needs_local_judgment]
+      properties:
+        value:
+          type: [number, 'null']
+        unit:
+          type: string
+          description: For example `mm`, `degC`, `t/ha/yr`, `days`, `months`, `bu/acre`, `USD/ha/yr`, `fraction`.
+        low:
+          type: [number, 'null']
+          description: 10th percentile of the uncertainty runs.
+        high:
+          type: [number, 'null']
+          description: 90th percentile of the uncertainty runs.
+        evidence_kind:
+          oneOf:
+            - $ref: '#/components/schemas/EvidenceKind'
+            - type: 'null'
+        access_tier:
+          oneOf:
+            - $ref: '#/components/schemas/AccessTier'
+            - type: 'null'
+        dataset_ids:
+          type: array
+          description: Ids from `datasets[]` that this value depends on.
+          items:
+            type: string
+        native_resolution_m:
+          type: [number, 'null']
+          description: Ground size of the coarsest dataset this value depends on.
+        period:
+          oneOf:
+            - $ref: '#/components/schemas/Period'
+            - type: 'null'
+        n_valid_obs:
+          type: [integer, 'null']
+          description: Valid observations used, for observed values.
+        n_expected_obs:
+          type: [integer, 'null']
+          description: Observations the period should have had.
+        null_reason:
+          oneOf:
+            - $ref: '#/components/schemas/NullReason'
+            - type: 'null'
+        null_explanation:
+          type: [string, 'null']
+          description: One plain sentence saying what is missing and why. Always set when `value` is null.
+        retryable:
+          type: boolean
+          description: True only when `null_reason` is `fetch_failed`.
+        needs_local_judgment:
+          type: boolean
+          description: True where a farmer or agronomist must confirm the value before relying on it.
+        note:
+          type: [string, 'null']
+          description: Plain-language caveat specific to this value.
+
+    # ---------------------------------------------------------------- datasets
+    Dataset:
+      type: object
+      required: [id, name, provider, role, coverage_scope, status, null_reason, retryable, message,
+                 access_tier, evidence_kind, native_resolution_m, footprint, period, as_of, source_url]
+      properties:
+        id:
+          type: string
+          description: Stable id, for example `nasa_power`, `hls`, `smap_l4`, `grace_fo`, `ssurgo`, `usda_cdl`.
+        name:
+          type: string
+        provider:
+          type: string
+        role:
+          type: string
+          description: What it is used for, in plain words.
+        coverage_scope:
+          $ref: '#/components/schemas/CoverageScope'
+        status:
+          $ref: '#/components/schemas/DatasetStatus'
+        null_reason:
+          description: Set when `status` is not `available`.
+          oneOf:
+            - $ref: '#/components/schemas/NullReason'
+            - type: 'null'
+        retryable:
+          type: boolean
+        message:
+          type: [string, 'null']
+          description: Plain-language explanation when not available.
+        access_tier:
+          oneOf:
+            - $ref: '#/components/schemas/AccessTier'
+            - type: 'null'
+        evidence_kind:
+          $ref: '#/components/schemas/EvidenceKind'
+        native_resolution_m:
+          type: [number, 'null']
+        footprint:
+          description: |
+            The source cell or cells that cover the field, for datasets coarser than the field.
+            Null for field-scale datasets. Draw it to show how much larger than the field the source is.
+          oneOf:
+            - $ref: '#/components/schemas/Polygon'
+            - type: 'null'
+        period:
+          oneOf:
+            - $ref: '#/components/schemas/Period'
+            - type: 'null'
+        as_of:
+          type: [string, 'null']
+          format: date-time
+          description: Fetch time for `live`, snapshot creation time for `snapshot`.
+        source_url:
+          type: string
+          format: uri
+
+    CoverageRequest:
+      type: object
+      required: [geometry]
+      properties:
+        geometry:
+          $ref: '#/components/schemas/FieldGeometry'
+    Coverage:
+      type: object
+      required: [field, datasets, crop_history_available]
+      properties:
+        field:
+          $ref: '#/components/schemas/FieldSummary'
+        datasets:
+          type: array
+          items:
+            $ref: '#/components/schemas/Dataset'
+        crop_history_available:
+          type: boolean
+          description: False means `farmer.current_rotation` is required.
+
+    # ---------------------------------------------------------------- crops
+    Crop:
+      type: object
+      required: [id, name, category, family, nitrogen_fixing, rooting_depth, water_demand, equipment,
+                 suitable, suitability_reason, grown_locally]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        category:
+          $ref: '#/components/schemas/CropCategory'
+        family:
+          type: [string, 'null']
+          description: Botanical family, used for pest-cycle breaks.
+        nitrogen_fixing:
+          type: boolean
+        rooting_depth:
+          type: [string, 'null']
+          enum: [shallow, medium, deep, null]
+        water_demand:
+          type: [string, 'null']
+          enum: [low, medium, high, null]
+        equipment:
+          type: array
+          items:
+            $ref: '#/components/schemas/Equipment'
+        suitable:
+          type: [boolean, 'null']
+          description: Climate screen at this location. Null where it cannot be judged.
+        suitability_reason:
+          type: string
+        grown_locally:
+          type: [boolean, 'null']
+          description: True where regional records show the crop is grown nearby. Null where no record exists.
+    CropList:
+      type: object
+      required: [location, crop_history_available, crops]
+      properties:
+        location:
+          $ref: '#/components/schemas/LatLon'
+        crop_history_available:
+          type: boolean
+        crops:
+          type: array
+          items:
+            $ref: '#/components/schemas/Crop'
+
+    # ---------------------------------------------------------------- request
+    RotationYear:
+      type: object
+      required: [crop_id]
+      properties:
+        crop_id:
+          type: string
+          description: Id from `GET /v1/crops`. Use `fallow` for a fallow year.
+        cover_crop_id:
+          type: [string, 'null']
+          description: Cover crop sown after harvest. An id of category `cover`, or null for none.
+    RotationInput:
+      type: object
+      required: [years]
+      properties:
+        years:
+          type: array
+          description: One entry per year of the cycle, in order.
+          minItems: 1
+          maxItems: 8
+          items:
+            $ref: '#/components/schemas/RotationYear'
+    FarmerInputs:
+      type: object
+      required: [water_availability, priorities]
+      properties:
+        water_availability:
+          $ref: '#/components/schemas/WaterAvailability'
+        irrigation_allowance_mm:
+          type: [number, 'null']
+          minimum: 0
+          description: Irrigation water available per year, if the farmer knows it.
+        equipment:
+          description: Equipment the farmer has. Null means unknown, in which case nothing is filtered and a gap is reported.
+          oneOf:
+            - type: array
+              uniqueItems: true
+              items:
+                $ref: '#/components/schemas/Equipment'
+            - type: 'null'
+        priorities:
+          type: array
+          description: Ranked, most important first. Unranked priorities get zero weight in the overall ranking and are still reported.
+          minItems: 1
+          maxItems: 6
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/Priority'
+        require_forage:
+          type: boolean
+          default: false
+          description: Alternatives must include a forage crop.
+        local_market_only:
+          type: boolean
+          default: false
+          description: Only suggest crops with evidence of being grown locally.
+        excluded_crop_ids:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+        preferred_crop_ids:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+        own_figures:
+          type: array
+          description: |
+            The farmer's own yield and selling price for a crop. Where given, they replace any published
+            record for that crop when income is worked out. The price is in the currency the result reports
+            in `currency`: US dollars in the United States, the country's own currency elsewhere.
+          default: []
+          items:
+            $ref: '#/components/schemas/OwnFigures'
+        current_rotation:
+          description: Overrides the detected rotation. Required where no crop-history layer exists.
+          oneOf:
+            - $ref: '#/components/schemas/RotationInput'
+            - type: 'null'
+        current_rotation_confirmed:
+          type: boolean
+          default: false
+          description: |
+            True once the farmer has confirmed the rotation proposed by `POST /v1/crop-history`. It
+            changes no number; it only sets `baseline.farmer_confirmed`. A supplied `current_rotation`
+            always counts as confirmed.
+    Scenario:
+      type: object
+      properties:
+        rainfall:
+          allOf:
+            - $ref: '#/components/schemas/RainfallScenario'
+          default: normal
+        temperature:
+          allOf:
+            - $ref: '#/components/schemas/TemperatureScenario'
+          default: normal
+    FieldInput:
+      type: object
+      required: [geometry]
+      properties:
+        name:
+          type: [string, 'null']
+          maxLength: 80
+        geometry:
+          $ref: '#/components/schemas/FieldGeometry'
+    AnalysisRequest:
+      type: object
+      required: [field, farmer]
+      properties:
+        field:
+          $ref: '#/components/schemas/FieldInput'
+        farmer:
+          $ref: '#/components/schemas/FarmerInputs'
+        scenario:
+          $ref: '#/components/schemas/Scenario'
+
+    # ---------------------------------------------------------------- job
+    Job:
+      type: object
+      required: [analysis_id, status, stage, stage_label, created_at, updated_at, error, result]
+      properties:
+        analysis_id:
+          type: string
+        status:
+          $ref: '#/components/schemas/JobStatus'
+        stage:
+          type: [string, 'null']
+          description: Machine id of the current stage. Ids and labels are listed in `Meta.job_stages`.
+        stage_label:
+          type: [string, 'null']
+          description: Human-readable stage, for example "Fetching rainfall history".
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        error:
+          description: Set when `status` is `error`.
+          oneOf:
+            - $ref: '#/components/schemas/Problem'
+            - type: 'null'
+        result:
+          description: Set when `status` is `done`.
+          oneOf:
+            - $ref: '#/components/schemas/Analysis'
+            - type: 'null'
+
+    # ---------------------------------------------------------------- result
+    Grid:
+      type: object
+      required: [crs, cell_size_m, n_cells]
+      properties:
+        crs:
+          type: string
+          description: Internal analysis CRS, for example `EPSG:5070`. Delivered geometry is always EPSG:4326.
+        cell_size_m:
+          type: number
+        n_cells:
+          type: integer
+    FieldSummary:
+      type: object
+      required: [name, area_ha, centroid, country_code, coverage_scopes, grid]
+      properties:
+        name:
+          type: [string, 'null']
+        area_ha:
+          type: number
+        centroid:
+          $ref: '#/components/schemas/LatLon'
+        country_code:
+          type: [string, 'null']
+          description: ISO 3166-1 alpha-2.
+        coverage_scopes:
+          type: array
+          description: Scopes that apply at this field. `global` is always present.
+          items:
+            $ref: '#/components/schemas/CoverageScope'
+        grid:
+          $ref: '#/components/schemas/Grid'
+
+    ResolvedScenarioStep:
+      type: object
+      required: [id, label, definition, quantity]
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        definition:
+          type: string
+          description: The rule in words, for example "A dry year that happens about one year in five here".
+        quantity:
+          description: What the step means at this field, for example growing-season rainfall in mm.
+          oneOf:
+            - $ref: '#/components/schemas/Quantity'
+            - type: 'null'
+    ResolvedScenario:
+      type: object
+      required: [rainfall, temperature]
+      properties:
+        rainfall:
+          $ref: '#/components/schemas/ResolvedScenarioStep'
+        temperature:
+          $ref: '#/components/schemas/ResolvedScenarioStep'
+
+    Weight:
+      type: object
+      required: [priority, score_id, rank, weight]
+      properties:
+        priority:
+          $ref: '#/components/schemas/Priority'
+        score_id:
+          $ref: '#/components/schemas/ScoreId'
+        rank:
+          type: [integer, 'null']
+          description: Position in the farmer's ranking, 1 first. Null if unranked.
+        weight:
+          type: number
+          minimum: 0
+          maximum: 1
+
+    ScoreComponent:
+      type: object
+      required: [id, label, higher_is_better, quantity]
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        higher_is_better:
+          type: boolean
+        quantity:
+          $ref: '#/components/schemas/Quantity'
+    Score:
+      type: object
+      description: |
+        `value` is 0 to 100 and higher is always better. Lead with `physical` in the interface where it
+        exists. `composite` scores combine several components and have no single physical unit.
+      required: [id, label, value, low, high, higher_is_better, composite, physical, physical_label,
+                 physical_higher_is_better, components, weight, explanation, null_reason,
+                 null_explanation, retryable]
+      properties:
+        id:
+          $ref: '#/components/schemas/ScoreId'
+        label:
+          type: string
+        value:
+          type: [number, 'null']
+          minimum: 0
+          maximum: 100
+        low:
+          type: [number, 'null']
+        high:
+          type: [number, 'null']
+        higher_is_better:
+          const: true
+        composite:
+          type: boolean
+        physical:
+          description: The underlying physical quantity, where one exists.
+          oneOf:
+            - $ref: '#/components/schemas/Quantity'
+            - type: 'null'
+        physical_label:
+          type: [string, 'null']
+          description: For example "Bare weeks per year" or "Seasonal water shortfall".
+        physical_higher_is_better:
+          type: [boolean, 'null']
+        components:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScoreComponent'
+        weight:
+          type: number
+          description: Weight from the farmer's ranking used in `overall`.
+        explanation:
+          type: string
+        null_reason:
+          oneOf:
+            - $ref: '#/components/schemas/NullReason'
+            - type: 'null'
+        null_explanation:
+          type: [string, 'null']
+          description: One plain sentence saying what is missing and why. Always set when `value` is null.
+        retryable:
+          type: boolean
+
+    CoverCell:
+      type: object
+      required: [cycle_year, month, state, crop_id, covered_fraction]
+      properties:
+        cycle_year:
+          type: integer
+          minimum: 1
+        month:
+          type: integer
+          minimum: 1
+          maximum: 12
+        state:
+          $ref: '#/components/schemas/CoverState'
+        crop_id:
+          type: [string, 'null']
+        covered_fraction:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Share of the month with the ground covered. Below 1 where planting or harvest falls mid-month.
+    CoverCalendar:
+      type: object
+      description: |
+        Twelve cells per cycle year. For the current rotation the bare months can be satellite
+        observations. For every alternative the calendar is model output from typical planting and
+        harvest dates.
+      required: [evidence_kind, access_tier, dataset_ids, period, n_valid_obs, n_expected_obs, cells,
+                 bare_weeks_per_year, living_cover_weeks_per_year]
+      properties:
+        evidence_kind:
+          $ref: '#/components/schemas/EvidenceKind'
+        access_tier:
+          $ref: '#/components/schemas/AccessTier'
+        dataset_ids:
+          type: array
+          items:
+            type: string
+        period:
+          oneOf:
+            - $ref: '#/components/schemas/Period'
+            - type: 'null'
+        n_valid_obs:
+          type: [integer, 'null']
+        n_expected_obs:
+          type: [integer, 'null']
+        cells:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoverCell'
+        bare_weeks_per_year:
+          description: |
+            Weeks of bare soil per year, averaged over the cycle. Computed from daily cover state, so
+            it is finer than the monthly cells. Its range reflects planting and harvest date spread.
+          allOf:
+            - $ref: '#/components/schemas/Quantity'
+        living_cover_weeks_per_year:
+          description: Weeks per year with a crop or cover crop growing, averaged over the cycle.
+          allOf:
+            - $ref: '#/components/schemas/Quantity'
+
+    RiskCell:
+      type: object
+      required: [cycle_year, month, hazard, level, share_of_years, exposed_crop_id]
+      properties:
+        cycle_year:
+          type: integer
+          minimum: 1
+        month:
+          type: integer
+          minimum: 1
+          maximum: 12
+        hazard:
+          $ref: '#/components/schemas/CalendarHazard'
+        level:
+          oneOf:
+            - $ref: '#/components/schemas/RiskLevel'
+            - type: 'null'
+        share_of_years:
+          type: [number, 'null']
+          minimum: 0
+          maximum: 1
+          description: Share of years in the record in which the hazard occurred in this month while the crop was exposed.
+        exposed_crop_id:
+          type: [string, 'null']
+    RiskCalendar:
+      type: object
+      required: [evidence_kind, access_tier, dataset_ids, native_resolution_m, period, n_years, cells,
+                 null_reason, null_explanation]
+      properties:
+        evidence_kind:
+          $ref: '#/components/schemas/EvidenceKind'
+        access_tier:
+          $ref: '#/components/schemas/AccessTier'
+        dataset_ids:
+          type: array
+          items:
+            type: string
+        native_resolution_m:
+          type: [number, 'null']
+        period:
+          oneOf:
+            - $ref: '#/components/schemas/Period'
+            - type: 'null'
+        n_years:
+          type: [integer, 'null']
+        cells:
+          type: array
+          items:
+            $ref: '#/components/schemas/RiskCell'
+        null_reason:
+          oneOf:
+            - $ref: '#/components/schemas/NullReason'
+            - type: 'null'
+        null_explanation:
+          type: [string, 'null']
+          description: One plain sentence saying what is missing and why. Always set when `null_reason` is set.
+
+    EvidenceItem:
+      type: object
+      required: [id, kind, title, summary, quantity, series_id]
+      properties:
+        id:
+          type: string
+        kind:
+          type: string
+          enum: [vegetation_stress_window, bare_field_window, soil_moisture_anomaly, evapotranspiration,
+                 water_balance, rainfall_reliability, extreme_rain, frost_risk, heat_stress, slope_erosion,
+                 soil_property, water_storage_trend, groundwater_trend, market_presence, yield_history,
+                 price_history]
+        title:
+          type: string
+        summary:
+          type: string
+          description: Plain language, no index names without explanation.
+        quantity:
+          $ref: '#/components/schemas/Quantity'
+        series_id:
+          type: [string, 'null']
+          description: Id in `Analysis.series` when a time series backs this item.
+    Reason:
+      type: object
+      required: [signal, text, evidence_ids]
+      properties:
+        signal:
+          type: string
+          enum: [soil, climate, water, bare_field, crop_stress, terrain, market, farmer_priority]
+        text:
+          type: string
+        evidence_ids:
+          type: array
+          items:
+            type: string
+    Benefit:
+      type: object
+      required: [tag, text, quantity]
+      properties:
+        tag:
+          type: string
+          enum: [water_saving, nitrogen_fixation, deep_rooting, organic_matter, soil_cover, infiltration,
+                 erosion_control, pest_cycle_break, forage, income]
+        text:
+          type: string
+        quantity:
+          oneOf:
+            - $ref: '#/components/schemas/Quantity'
+            - type: 'null'
+    Tradeoff:
+      type: object
+      description: One dimension of this rotation compared with the current rotation.
+      required: [score_id, direction, share_of_runs_better, score_delta, physical_delta, text]
+      properties:
+        score_id:
+          $ref: '#/components/schemas/ScoreId'
+        direction:
+          type: string
+          description: |
+            Decided by the server on paired uncertainty runs, where both rotations face the same
+            weather year, soil and crop draws. `better` or `worse`: this rotation wins or loses in
+            nearly all runs. `uncertain`: the values differ but neither wins consistently, shown as
+            "Too close to call". `similar`: no meaningful difference. `unknown`: one side is null.
+            The thresholds are in `Meta.tradeoff_rule`.
+          enum: [better, worse, similar, uncertain, unknown]
+        share_of_runs_better:
+          type: [number, 'null']
+          minimum: 0
+          maximum: 1
+          description: Share of paired runs in which this rotation scored higher than the current one.
+        score_delta:
+          type: [number, 'null']
+          description: This rotation's score minus the current rotation's.
+        physical_delta:
+          description: Difference in the physical quantity, signed, where both sides have one.
+          oneOf:
+            - $ref: '#/components/schemas/Quantity'
+            - type: 'null'
+        text:
+          type: string
+    Gap:
+      type: object
+      required: [id, text, affects, dataset_id, null_reason]
+      properties:
+        id:
+          type: string
+        text:
+          type: string
+        affects:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScoreId'
+        dataset_id:
+          type: [string, 'null']
+        null_reason:
+          oneOf:
+            - $ref: '#/components/schemas/NullReason'
+            - type: 'null'
+    LocalReview:
+      type: object
+      required: [topic, text, reviewer]
+      properties:
+        topic:
+          type: string
+        text:
+          type: string
+        reviewer:
+          type: string
+          enum: [farmer, agronomist, extension_service, water_authority, buyer]
+
+    RankStability:
+      type: object
+      required: [share_ranked_first, n_runs]
+      properties:
+        share_ranked_first:
+          type: [number, 'null']
+          minimum: 0
+          maximum: 1
+          description: Share of uncertainty runs in which this rotation had the highest overall score.
+        n_runs:
+          type: integer
+    Overall:
+      type: object
+      required: [value, low, high, rank, rank_stability, null_explanation]
+      properties:
+        null_explanation:
+          type: [string, 'null']
+          description: |
+            Why there is no overall score. The rotations are not ranked when the farmer's first
+            priority could not be scored for every one of them.
+        value:
+          type: [number, 'null']
+          description: Weighted mean of the non-null scores under the farmer's ranking.
+        low:
+          type: [number, 'null']
+        high:
+          type: [number, 'null']
+        rank:
+          type: [integer, 'null']
+          minimum: 1
+        rank_stability:
+          $ref: '#/components/schemas/RankStability'
+
+    RotationYearResolved:
+      type: object
+      required: [cycle_year, crop_id, crop_name, cover_crop_id]
+      properties:
+        cycle_year:
+          type: integer
+          minimum: 1
+        crop_id:
+          type: string
+        crop_name:
+          type: string
+        cover_crop_id:
+          type: [string, 'null']
+    ObservedYear:
+      type: object
+      description: What the crop map shows on the field in one year.
+      required: [year, crop_id, class_name, share_of_field, n_cells]
+      properties:
+        year:
+          type: integer
+        crop_id:
+          type: [string, 'null']
+          description: Null when no class covered half the field, or the class is not a crop this tool handles.
+        class_name:
+          type: string
+          description: The crop map's own name for the largest class that year.
+        share_of_field:
+          type: number
+          minimum: 0
+          maximum: 1
+        n_cells:
+          type: integer
+          description: Grid cells or sample points read that year.
+    DetectedRotation:
+      type: object
+      required: [years, label, detection_basis, share_of_years_consistent]
+      properties:
+        years:
+          type: array
+          description: Can be sent back unchanged as `farmer.current_rotation.years`.
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/RotationYear'
+        label:
+          type: string
+        detection_basis:
+          $ref: '#/components/schemas/DetectionBasis'
+        share_of_years_consistent:
+          $ref: '#/components/schemas/Quantity'
+    CropHistory:
+      type: object
+      required: [field, crop_history_available, detected, observed_years, null_reason, null_explanation, retryable]
+      properties:
+        field:
+          $ref: '#/components/schemas/FieldSummary'
+        crop_history_available:
+          type: boolean
+        detected:
+          description: Null when no rotation could be read. `null_reason` then says why.
+          oneOf:
+            - $ref: '#/components/schemas/DetectedRotation'
+            - type: 'null'
+        observed_years:
+          type: array
+          items:
+            $ref: '#/components/schemas/ObservedYear'
+        null_reason:
+          oneOf:
+            - $ref: '#/components/schemas/NullReason'
+            - type: 'null'
+        null_explanation:
+          type: [string, 'null']
+        retryable:
+          type: boolean
+    CropFitCheck:
+      type: object
+      required: [check, status, quantity, text]
+      properties:
+        check:
+          $ref: '#/components/schemas/CropFitCheckId'
+        status:
+          $ref: '#/components/schemas/CropFitStatus'
+        quantity:
+          $ref: '#/components/schemas/Quantity'
+        text:
+          type: string
+          description: One plain sentence with the figure that decided the status.
+    CropFit:
+      type: object
+      description: How the field's conditions suit one crop of the rotation. The rules are in `Meta.crop_fit_checks`.
+      required: [crop_id, crop_name, checks, limiting_check, failure]
+      properties:
+        crop_id:
+          type: string
+        crop_name:
+          type: string
+        checks:
+          type: array
+          description: Always the four checks, in `CropFitCheckId` order.
+          minItems: 4
+          maxItems: 4
+          items:
+            $ref: '#/components/schemas/CropFitCheck'
+        limiting_check:
+          description: |
+            The check that constrains this crop most here, after Liebig's law of the minimum as CropSuite v1.0 uses it
+            (Zabel, Knüttel and Poschlod 2025, Geosci. Model Dev. 18, 1067-1087): the worst status, ties broken by how far
+            the check's figure is past the threshold of that status, as a share of the threshold. Null when every check fits
+            or cannot be judged.
+          oneOf:
+            - $ref: '#/components/schemas/CropFitCheckId'
+            - type: 'null'
+        failure:
+          description: How often this crop would likely fail at this field. Null when no cause of failure can be judged for it.
+          oneOf:
+            - $ref: '#/components/schemas/CropFailure'
+            - type: 'null'
+    CropFailure:
+      type: object
+      description: |
+        The recurrence rate of potential crop failure, after CropSuite v1.0 (Zabel, Knüttel and Poschlod 2025, Geosci. Model
+        Dev. 18, 1067-1087), counted over weather years of the record, not over runs. A season fails on a killing frost while
+        the crop emerges or sets grain, a sustained spell of extreme heat while it flowers, or a water shortage, given the
+        supply the farmer stated, that costs more than half its yield (FAO-33: 1 - Ya/Ym = Ky (1 - ETa/ETc)). A weather year
+        counts as a likely failure when at least half of the runs fail a season of the crop harvested in it; the runs differ
+        in soil, planting date and crop within their stated ranges. Each failed year is counted once, under the cause that
+        failed the most runs of its worst season. The thresholds are in `backend/app/core/config.py`.
+      required: [years_failed, years_total, by_cause]
+      properties:
+        years_failed:
+          type: integer
+          minimum: 0
+        years_total:
+          type: integer
+          minimum: 1
+          description: |
+            The weather years the crop is harvested in across the runs: every year of the record under normal rainfall,
+            only the driest years under a dry rainfall scenario.
+        by_cause:
+          $ref: '#/components/schemas/CropFailureCauses'
+    CropFailureCauses:
+      type: object
+      description: Failed years by cause. They sum to `years_failed`.
+      required: [frost, heat, water]
+      properties:
+        frost:
+          type: [integer, 'null']
+          minimum: 0
+          description: Null when the crop has no growth stages to judge frost by, as for a perennial.
+        heat:
+          type: [integer, 'null']
+          minimum: 0
+          description: Null when the crop has no flowering stage to judge heat by, as for a perennial.
+        water:
+          type: [integer, 'null']
+          minimum: 0
+          description: Null when the field's soil values or the crop's yield response factor are missing.
+    BaselineDetection:
+      type: object
+      description: Present on the current rotation only.
+      required: [baseline_source, farmer_confirmed, share_of_years_consistent, detection_basis, observed_years]
+      properties:
+        detection_basis:
+          description: Null when the farmer supplied the rotation.
+          oneOf:
+            - $ref: '#/components/schemas/DetectionBasis'
+            - type: 'null'
+        observed_years:
+          type: array
+          description: The crop map's year-by-year reading. Empty when the farmer supplied the rotation.
+          items:
+            $ref: '#/components/schemas/ObservedYear'
+        baseline_source:
+          type: string
+          enum: [cdl_derived, farmer_supplied]
+        farmer_confirmed:
+          type: boolean
+        share_of_years_consistent:
+          description: Share of observed years that match the detected cycle. Null when farmer supplied.
+          oneOf:
+            - $ref: '#/components/schemas/Quantity'
+            - type: 'null'
+    Rotation:
+      type: object
+      required: [id, role, change_level, label, years, crops_per_year, baseline, crop_fit, cover_calendar, scores, overall,
+                 why_suggested, evidence, benefits, tradeoffs, risk_calendar, gaps, local_review]
+      properties:
+        crops_per_year:
+          type: number
+          minimum: 0
+          description: Crops grown per year, averaged over the cycle. A fallow year counts as none.
+        id:
+          type: string
+        role:
+          type: string
+          enum: [current, alternative]
+        change_level:
+          type: string
+          description: How far this rotation departs from the current one.
+          enum: [none, low, high]
+        label:
+          type: string
+          description: For example "Corn, then wheat, then sorghum".
+        years:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/RotationYearResolved'
+        baseline:
+          oneOf:
+            - $ref: '#/components/schemas/BaselineDetection'
+            - type: 'null'
+        crop_fit:
+          type: array
+          description: One entry per crop in the rotation, in the order grown.
+          items:
+            $ref: '#/components/schemas/CropFit'
+        cover_calendar:
+          $ref: '#/components/schemas/CoverCalendar'
+        scores:
+          type: array
+          description: Always all six, in `ScoreId` order.
+          minItems: 6
+          maxItems: 6
+          items:
+            $ref: '#/components/schemas/Score'
+        overall:
+          $ref: '#/components/schemas/Overall'
+        why_suggested:
+          type: array
+          items:
+            $ref: '#/components/schemas/Reason'
+        evidence:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvidenceItem'
+        benefits:
+          type: array
+          items:
+            $ref: '#/components/schemas/Benefit'
+        tradeoffs:
+          type: array
+          description: Empty for the current rotation.
+          items:
+            $ref: '#/components/schemas/Tradeoff'
+        risk_calendar:
+          $ref: '#/components/schemas/RiskCalendar'
+        gaps:
+          type: array
+          items:
+            $ref: '#/components/schemas/Gap'
+        local_review:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalReview'
+
+    SeriesPoint:
+      type: object
+      required: [t, value, n_valid_obs, n_expected_obs]
+      properties:
+        t:
+          type: string
+          format: date
+          description: Start of the period.
+        value:
+          type: [number, 'null']
+        n_valid_obs:
+          type: [integer, 'null']
+        n_expected_obs:
+          type: [integer, 'null']
+    Series:
+      type: object
+      required: [id, label, unit, cadence, evidence_kind, access_tier, dataset_ids, native_resolution_m, points]
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        unit:
+          type: string
+        cadence:
+          type: string
+          enum: [daily, sixteen_day, monthly, yearly]
+        evidence_kind:
+          $ref: '#/components/schemas/EvidenceKind'
+        access_tier:
+          $ref: '#/components/schemas/AccessTier'
+        dataset_ids:
+          type: array
+          items:
+            type: string
+        native_resolution_m:
+          type: [number, 'null']
+        points:
+          type: array
+          items:
+            $ref: '#/components/schemas/SeriesPoint'
+
+    SatelliteGroundPair:
+      type: object
+      description: |
+        A satellite or model value beside a ground measurement of the same thing. The two are never
+        merged. `difference` is present only when `comparison_basis` is `same_unit_value`.
+      required: [id, label, satellite, ground, comparison_basis, agreement, difference, rule,
+                 ground_site_count, ground_distance_km]
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        satellite:
+          $ref: '#/components/schemas/Quantity'
+        ground:
+          $ref: '#/components/schemas/Quantity'
+        comparison_basis:
+          type: string
+          enum: [same_unit_value, trend_direction, none]
+        agreement:
+          type: string
+          enum: [consistent, differs, not_comparable]
+        difference:
+          oneOf:
+            - $ref: '#/components/schemas/Quantity'
+            - type: 'null'
+        rule:
+          type: string
+          description: The test that decided `agreement`, in words.
+        ground_site_count:
+          type: [integer, 'null']
+        ground_distance_km:
+          type: [number, 'null']
+          description: Distance from the field to the nearest ground site used.
+
+    UncertaintyDriver:
+      type: object
+      required: [id, label, share]
+      properties:
+        id:
+          type: string
+          enum: [weather_variability, soil_properties, crop_parameters, rainfall_source_disagreement]
+        label:
+          type: string
+        share:
+          type: [number, 'null']
+          minimum: 0
+          maximum: 1
+          description: Share of the spread in the overall score attributable to this source.
+    Uncertainty:
+      type: object
+      required: [method, n_runs, interval, seed, drivers]
+      properties:
+        method:
+          type: string
+        n_runs:
+          type: integer
+        interval:
+          const: p10_p90
+        seed:
+          type: string
+        drivers:
+          type: array
+          items:
+            $ref: '#/components/schemas/UncertaintyDriver'
+
+    ZoneSummary:
+      type: object
+      required: [hazard, available, field_wide, null_reason]
+      properties:
+        hazard:
+          $ref: '#/components/schemas/ZoneHazard'
+        available:
+          type: boolean
+        field_wide:
+          type: boolean
+          description: True when the source cannot separate parts of the field, so the whole field is one class.
+        null_reason:
+          oneOf:
+            - $ref: '#/components/schemas/NullReason'
+            - type: 'null'
+
+    OwnFigures:
+      type: object
+      required: [crop_id, yield_t_per_ha, price_per_tonne]
+      properties:
+        crop_id:
+          type: string
+          description: A single crop from `GET /v1/crops`, not a two-crops-a-year pair.
+        yield_t_per_ha:
+          type: number
+          exclusiveMinimum: 0
+          maximum: 100
+        price_per_tonne:
+          type: number
+          exclusiveMinimum: 0
+
+    CloseCall:
+      type: object
+      required: [rotation_ids, share_of_runs_first_ahead, text]
+      properties:
+        rotation_ids:
+          type: array
+          minItems: 2
+          description: The first-ranked rotation, then every rotation it is not clearly ahead of, in rank order. Can include what is grown now.
+          items:
+            type: string
+        share_of_runs_first_ahead:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Share of paired runs in which the first-ranked rotation scored higher than the closest of the others.
+        text:
+          type: string
+
+    Currency:
+      type: object
+      description: The currency every money figure in the result is in.
+      required: [code, name]
+      properties:
+        code:
+          type: string
+          description: ISO 4217 code, for example `USD`, `PHP`, `THB`.
+        name:
+          type: string
+
+    Analysis:
+      type: object
+      required: [contract_version, analysis_id, created_at, disclaimer, request, field, datasets, scenario,
+                 weights, rotations, field_evidence, series, comparisons, zones, uncertainty, gaps, currency, ranking_note, close_call]
+      properties:
+        currency:
+          $ref: '#/components/schemas/Currency'
+        close_call:
+          description: |
+            Set when the first-ranked rotation is not clearly ahead of another: it scored higher in fewer
+            than three of four paired runs, or the two are under two points apart. Say so with the ranking
+            instead of naming one winner. Null when the first-ranked rotation is clearly ahead of every other.
+          oneOf:
+            - $ref: '#/components/schemas/CloseCall'
+            - type: 'null'
+        ranking_note:
+          type: [string, 'null']
+          description: |
+            Set when something the farmer ranked could not be scored, so the ranking leaves it out.
+            Show it with the ranking, not in a drawer. Null when everything ranked was scored.
+        contract_version:
+          type: string
+        analysis_id:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        disclaimer:
+          type: string
+          description: The statement that the tool supports and does not replace local expertise.
+        request:
+          $ref: '#/components/schemas/AnalysisRequest'
+        field:
+          $ref: '#/components/schemas/FieldSummary'
+        datasets:
+          type: array
+          items:
+            $ref: '#/components/schemas/Dataset'
+        scenario:
+          $ref: '#/components/schemas/ResolvedScenario'
+        weights:
+          type: array
+          items:
+            $ref: '#/components/schemas/Weight'
+        rotations:
+          type: array
+          description: The current rotation first, then alternatives by overall rank.
+          minItems: 3
+          items:
+            $ref: '#/components/schemas/Rotation'
+        field_evidence:
+          type: array
+          description: Conditions of the field that hold whatever is grown.
+          items:
+            $ref: '#/components/schemas/EvidenceItem'
+        series:
+          type: array
+          items:
+            $ref: '#/components/schemas/Series'
+        comparisons:
+          type: array
+          items:
+            $ref: '#/components/schemas/SatelliteGroundPair'
+        zones:
+          type: array
+          description: Which zone layers exist. Geometry is at `GET /v1/analyses/{analysis_id}/zones`.
+          items:
+            $ref: '#/components/schemas/ZoneSummary'
+        uncertainty:
+          $ref: '#/components/schemas/Uncertainty'
+        gaps:
+          type: array
+          description: Gaps that apply to the whole analysis.
+          items:
+            $ref: '#/components/schemas/Gap'
+
+    # ---------------------------------------------------------------- reasoning
+    ReasoningStepId:
+      type: string
+      enum: [field, conditions, crop_fit, runs, scores, weights, ranking]
+    ReasoningFact:
+      type: object
+      description: One value read from the analysis result, with the field it was read from.
+      required: [group, label, text, value, source, dataset_ids]
+      properties:
+        group:
+          type: [string, 'null']
+          description: The rotation, crop or set the fact belongs to. Null when the step has a single set.
+        label:
+          type: string
+        text:
+          type: string
+          description: |
+            The value in words, rounded as shown. It can add the unit, range or sentence that sits
+            beside the value in the same item of the result.
+        value:
+          type: [number, 'null']
+          description: The number at `source`, unrounded. Null when the fact is words or a period.
+        source:
+          type: string
+          description: |
+            Where in the analysis result the fact was read, for example
+            `field_evidence[id=rainfall].quantity.value`. `[key=value]` picks the list item whose `key` is `value`.
+        dataset_ids:
+          type: array
+          description: Ids from `datasets[]` behind the fact. Empty for the farmer's answers and the engine's own results.
+          items:
+            type: string
+    ReasoningStep:
+      type: object
+      required: [id, title, method, facts]
+      properties:
+        id:
+          $ref: '#/components/schemas/ReasoningStepId'
+        title:
+          type: string
+        method:
+          type: string
+          description: What the engine does in this step, in plain words.
+        facts:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReasoningFact'
+    SummaryStatus:
+      type: string
+      description: |
+        `not_configured`: no language model is set up; the engine wrote the summary.
+        `accepted`: the model's reply passed every check and is the summary.
+        `rejected`: the reply failed a check; the engine's summary is shown and `status_note` says why.
+        `failed`: the model did not answer in time or its answer could not be read; the engine's summary is shown.
+      enum: [not_configured, accepted, rejected, failed]
+    ReasoningSummary:
+      type: object
+      required: [text, status, model, status_note, facts_given]
+      properties:
+        text:
+          type: string
+          description: Written by the model when `status` is `accepted`, by the engine otherwise.
+        status:
+          $ref: '#/components/schemas/SummaryStatus'
+        model:
+          type: [string, 'null']
+          description: The language model asked, for example `openai/gpt-4o-mini`. Null when none is set up.
+        status_note:
+          type: [string, 'null']
+          description: Why the model's reply is not shown, in one plain sentence. Null unless `status` is `rejected` or `failed`.
+        facts_given:
+          type: array
+          description: The exact lines the model was given, one fact each. Empty when no model is set up.
+          items:
+            type: string
+    Reasoning:
+      type: object
+      required: [analysis_id, steps, summary]
+      properties:
+        analysis_id:
+          type: string
+        steps:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/ReasoningStep'
+        summary:
+          $ref: '#/components/schemas/ReasoningSummary'
+
+    # ---------------------------------------------------------------- zones and layers
+    ZoneClass:
+      type: object
+      required: [index, label, min, max]
+      properties:
+        index:
+          $ref: '#/components/schemas/RiskLevel'
+        label:
+          type: string
+        min:
+          type: [number, 'null']
+        max:
+          type: [number, 'null']
+    ZoneFeature:
+      type: object
+      required: [type, geometry, properties]
+      properties:
+        type:
+          const: Feature
+        geometry:
+          oneOf:
+            - $ref: '#/components/schemas/Polygon'
+            - $ref: '#/components/schemas/MultiPolygon'
+        properties:
+          type: object
+          required: [class_index, value, area_ha]
+          properties:
+            class_index:
+              $ref: '#/components/schemas/RiskLevel'
+            value:
+              type: [number, 'null']
+              description: Mean raw value in the zone, in the legend unit.
+            area_ha:
+              type: number
+    ZoneFeatureCollection:
+      type: object
+      required: [type, features]
+      properties:
+        type:
+          const: FeatureCollection
+        features:
+          type: array
+          items:
+            $ref: '#/components/schemas/ZoneFeature'
+    ZoneLayer:
+      type: object
+      required: [hazard, label, field_wide, evidence_kind, access_tier, dataset_ids, native_resolution_m,
+                 period, n_valid_obs, n_expected_obs, unit, classes, null_reason, null_explanation,
+                 retryable, needs_local_judgment, features]
+      properties:
+        hazard:
+          $ref: '#/components/schemas/ZoneHazard'
+        label:
+          type: string
+        field_wide:
+          type: boolean
+        evidence_kind:
+          oneOf:
+            - $ref: '#/components/schemas/EvidenceKind'
+            - type: 'null'
+        access_tier:
+          oneOf:
+            - $ref: '#/components/schemas/AccessTier'
+            - type: 'null'
+        dataset_ids:
+          type: array
+          items:
+            type: string
+        native_resolution_m:
+          type: [number, 'null']
+        period:
+          oneOf:
+            - $ref: '#/components/schemas/Period'
+            - type: 'null'
+        n_valid_obs:
+          type: [integer, 'null']
+        n_expected_obs:
+          type: [integer, 'null']
+        unit:
+          type: [string, 'null']
+        classes:
+          type: array
+          description: Class breaks for the legend.
+          items:
+            $ref: '#/components/schemas/ZoneClass'
+        null_reason:
+          oneOf:
+            - $ref: '#/components/schemas/NullReason'
+            - type: 'null'
+        null_explanation:
+          type: [string, 'null']
+          description: One plain sentence saying what is missing and why. Always set when `features` is null.
+        retryable:
+          type: boolean
+        needs_local_judgment:
+          type: boolean
+        features:
+          oneOf:
+            - $ref: '#/components/schemas/ZoneFeatureCollection'
+            - type: 'null'
+    ZoneLayers:
+      type: object
+      required: [analysis_id, grid, layers]
+      properties:
+        analysis_id:
+          type: string
+        grid:
+          $ref: '#/components/schemas/Grid'
+        layers:
+          type: array
+          description: One per hazard, always all four.
+          minItems: 4
+          maxItems: 4
+          items:
+            $ref: '#/components/schemas/ZoneLayer'
+
+    ContextLayer:
+      type: object
+      required: [id, title, kind, dataset_id, url_template, tile_size, min_zoom, max_zoom, attribution,
+                 license, license_url, coverage_scope, native_resolution_m, pre_rendered, time, legend_url, detail_of]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        kind:
+          $ref: '#/components/schemas/LayerKind'
+        dataset_id:
+          type: string
+          description: The product shown. A label, not a key into an analysis's `datasets[]`.
+        url_template:
+          type: string
+          description: |
+            Web Mercator tile template with `{z}`, `{x}`, `{y}` and, when `time` is set, `{time}`. A
+            layer rendered on request uses `{bbox-epsg-3857}` in place of the three tile tokens.
+        license:
+          type: [string, 'null']
+          description: For example "Public domain" or "CC BY-NC-SA 4.0". Null where the publisher states none.
+        license_url:
+          type: [string, 'null']
+          format: uri
+        detail_of:
+          type: [string, 'null']
+          description: Id of the layer this one sharpens at close zoom. Draw it over that layer from `min_zoom` up.
+        tile_size:
+          type: integer
+        min_zoom:
+          type: integer
+        max_zoom:
+          type: integer
+        attribution:
+          type: string
+        coverage_scope:
+          $ref: '#/components/schemas/CoverageScope'
+        native_resolution_m:
+          type: [number, 'null']
+        pre_rendered:
+          const: true
+        time:
+          oneOf:
+            - type: object
+              required: [default, start, end, step]
+              properties:
+                default:
+                  type: string
+                  format: date
+                start:
+                  type: string
+                  format: date
+                end:
+                  type: string
+                  format: date
+                step:
+                  type: string
+                  enum: [day, month]
+            - type: 'null'
+        legend_url:
+          type: [string, 'null']
+          format: uri
+    LayerList:
+      type: object
+      required: [location, layers]
+      properties:
+        location:
+          $ref: '#/components/schemas/LatLon'
+        layers:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContextLayer'
+
+    OutlookDay:
+      type: object
+      required: [date, t_max_c, t_min_c, rain_mm, rain_chance, frost, heat]
+      properties:
+        rain_chance:
+          type: [number, 'null']
+          minimum: 0
+          maximum: 1
+          description: Chance of rain that day, 0 to 1.
+        date:
+          type: string
+          format: date
+        t_max_c:
+          type: number
+        t_min_c:
+          type: number
+        rain_mm:
+          type: number
+          minimum: 0
+        frost:
+          type: boolean
+          description: The forecast minimum is at or below the frost threshold served by meta.
+        heat:
+          type: boolean
+          description: The forecast maximum is at or above the heat threshold served by meta.
+
+    Outlook:
+      type: object
+      required: [location, available, dataset_id, provider, source_url, evidence_kind, access_tier, issued_at, days,
+                 null_reason, null_explanation, retryable, note]
+      properties:
+        location:
+          $ref: '#/components/schemas/LatLon'
+        available:
+          type: boolean
+        dataset_id:
+          type: string
+        provider:
+          type: string
+        source_url:
+          type: string
+          format: uri
+        evidence_kind:
+          $ref: '#/components/schemas/EvidenceKind'
+        access_tier:
+          $ref: '#/components/schemas/AccessTier'
+        issued_at:
+          type: [string, 'null']
+          format: date-time
+          description: When the forecast was fetched.
+        days:
+          type: array
+          maxItems: 10
+          items:
+            $ref: '#/components/schemas/OutlookDay'
+        null_reason:
+          oneOf:
+            - $ref: '#/components/schemas/NullReason'
+            - type: 'null'
+        null_explanation:
+          type: [string, 'null']
+        retryable:
+          type: boolean
+        note:
+          type: string
+
+    BriefingRecentRain:
+      type: object
+      description: Rain that has fallen lately, from the daily weather record. The record runs a few days behind.
+      required: [available, null_reason, null_explanation, dataset_ids, last_7_days_mm, last_30_days_mm, last_real_rain_date, read_through]
+      properties:
+        available:
+          type: boolean
+        null_reason:
+          oneOf:
+            - $ref: '#/components/schemas/NullReason'
+            - type: 'null'
+        null_explanation:
+          type: [string, 'null']
+        dataset_ids:
+          type: array
+          items:
+            type: string
+        last_7_days_mm:
+          type: [number, 'null']
+        last_30_days_mm:
+          type: [number, 'null']
+        last_real_rain_date:
+          type: [string, 'null']
+          format: date
+        read_through:
+          type: [string, 'null']
+          format: date
+
+    BriefingSoilWetness:
+      type: object
+      description: How wet the soil is on a scale from 0, completely dry, to 1, saturated. It is not a share of the soil's volume. One value for a weather cell about 55 km wide.
+      required: [available, null_reason, null_explanation, dataset_ids, now, usual, usual_low, usual_high, read_on]
+      properties:
+        available:
+          type: boolean
+        null_reason:
+          oneOf:
+            - $ref: '#/components/schemas/NullReason'
+            - type: 'null'
+        null_explanation:
+          type: [string, 'null']
+        dataset_ids:
+          type: array
+          items:
+            type: string
+        now:
+          type: [number, 'null']
+        usual:
+          type: [number, 'null']
+        usual_low:
+          type: [number, 'null']
+        usual_high:
+          type: [number, 'null']
+        read_on:
+          type: [string, 'null']
+          format: date
+
+    BriefingWeekWater:
+      type: object
+      description: Water a well-watered crop cover would lose over the next seven days, from the forecast.
+      required: [available, null_reason, null_explanation, dataset_ids, loss_mm, basis]
+      properties:
+        available:
+          type: boolean
+        null_reason:
+          oneOf:
+            - $ref: '#/components/schemas/NullReason'
+            - type: 'null'
+        null_explanation:
+          type: [string, 'null']
+        dataset_ids:
+          type: array
+          items:
+            type: string
+        loss_mm:
+          type: [number, 'null']
+        basis:
+          type: [string, 'null']
+
+    BriefingMonthOutlook:
+      type: object
+      description: What next month usually brings, from the long record. Not a seasonal forecast.
+      required: [available, null_reason, null_explanation, dataset_ids, month, rain_mm, rain_basis, coldest_night_c, coldest_night_basis, frost_share_of_years, frost_basis, usual_pattern]
+      properties:
+        available:
+          type: boolean
+        null_reason:
+          oneOf:
+            - $ref: '#/components/schemas/NullReason'
+            - type: 'null'
+        null_explanation:
+          type: [string, 'null']
+        dataset_ids:
+          type: array
+          items:
+            type: string
+        month:
+          type: [integer, 'null']
+          minimum: 1
+          maximum: 12
+        rain_mm:
+          type: [number, 'null']
+        rain_basis:
+          type: [string, 'null']
+        coldest_night_c:
+          type: [number, 'null']
+        coldest_night_basis:
+          type: [string, 'null']
+        frost_share_of_years:
+          type: [number, 'null']
+        frost_basis:
+          type: [string, 'null']
+        usual_pattern:
+          type: boolean
+
+    BriefingYearClimate:
+      type: object
+      description: The long weather record in a few numbers.
+      required: [available, null_reason, null_explanation, dataset_ids, usual_rain_mm, dry_year_mm, interval, monthly_rain_mm, hot_days_per_year, frost_days_per_year, hottest_day_c, coldest_night_c, record_years]
+      properties:
+        available:
+          type: boolean
+        null_reason:
+          oneOf:
+            - $ref: '#/components/schemas/NullReason'
+            - type: 'null'
+        null_explanation:
+          type: [string, 'null']
+        dataset_ids:
+          type: array
+          items:
+            type: string
+        usual_rain_mm:
+          type: [number, 'null']
+        dry_year_mm:
+          type: [number, 'null']
+        interval:
+          type: [string, 'null']
+        monthly_rain_mm:
+          type: [array, 'null']
+          minItems: 12
+          maxItems: 12
+          items:
+            type: number
+        hot_days_per_year:
+          type: [number, 'null']
+        frost_days_per_year:
+          type: [number, 'null']
+        hottest_day_c:
+          type: [number, 'null']
+        coldest_night_c:
+          type: [number, 'null']
+        record_years:
+          type: [string, 'null']
+
+    BriefingCropAdvice:
+      type: object
+      description: |
+        Which crops are in their sowing window, checked against the forecast, topsoil wetness and what
+        next month usually brings. In the United States the window is the weeks in which the middle 80%
+        of the state's crop was planted, from USDA crop progress reports. Elsewhere it is a general
+        reference date. The weather rules are simple conventions, so this is always for local judgment.
+      required: [available, null_reason, null_explanation, dataset_ids, crops, action, basis, needs_local_judgment]
+      properties:
+        basis:
+          type: [string, 'null']
+          description: Where the planting dates come from, in words for the farmer.
+        needs_local_judgment:
+          type: boolean
+        available:
+          type: boolean
+        null_reason:
+          oneOf:
+            - $ref: '#/components/schemas/NullReason'
+            - type: 'null'
+        null_explanation:
+          type: [string, 'null']
+        dataset_ids:
+          type: array
+          items:
+            type: string
+        crops:
+          type: array
+          items:
+            type: object
+            required: [crop_id, name, verdict, good, reason]
+            properties:
+              crop_id:
+                type: string
+              name:
+                type: string
+              verdict:
+                type: string
+              good:
+                type: boolean
+              reason:
+                type: string
+        action:
+          type: [string, 'null']
+
+    Briefing:
+      type: object
+      required: [location, as_of, forecast, recent_rain, soil_surface, soil_root_zone, week_water, month_outlook, year_climate,
+                 sow_this_week, plant_this_month]
+      properties:
+        location:
+          $ref: '#/components/schemas/LatLon'
+        as_of:
+          type: string
+          format: date
+        forecast:
+          $ref: '#/components/schemas/Outlook'
+        recent_rain:
+          $ref: '#/components/schemas/BriefingRecentRain'
+        soil_surface:
+          $ref: '#/components/schemas/BriefingSoilWetness'
+        soil_root_zone:
+          $ref: '#/components/schemas/BriefingSoilWetness'
+        week_water:
+          $ref: '#/components/schemas/BriefingWeekWater'
+        month_outlook:
+          $ref: '#/components/schemas/BriefingMonthOutlook'
+        year_climate:
+          $ref: '#/components/schemas/BriefingYearClimate'
+        sow_this_week:
+          $ref: '#/components/schemas/BriefingCropAdvice'
+        plant_this_month:
+          $ref: '#/components/schemas/BriefingCropAdvice'
+
+    # ---------------------------------------------------------------- meta
+    Label:
+      type: object
+      required: [id, label, description]
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        description:
+          type: string
+    ScoreDefinition:
+      type: object
+      required: [id, label, description, composite, physical_label, physical_unit, physical_higher_is_better, priority]
+      properties:
+        id:
+          $ref: '#/components/schemas/ScoreId'
+        label:
+          type: string
+        description:
+          type: string
+        composite:
+          type: boolean
+        physical_label:
+          type: [string, 'null']
+        physical_unit:
+          type: [string, 'null']
+        physical_higher_is_better:
+          type: [boolean, 'null']
+        priority:
+          $ref: '#/components/schemas/Priority'
+    Meta:
+      type: object
+      description: |
+        Display labels are locked with the design system and served only from here:
+        - evidence kinds: Satellite, Ground reading, Soil survey baseline, Model output
+        - null reasons: No coverage, Not set up, Too few readings, Could not load
+        - needs_local_judgment: Check locally
+        - risk levels 0, 1, 2: Lower, Raised, High
+        - cover states: Crop, Cover crop, Stubble, Bare
+        - calendar hazards: Frost while a crop is vulnerable, Heat while a crop is vulnerable,
+          Dry spell while a crop is growing, Heavy rain, Bare soil
+        - rainfall scenarios: Normal, Dry, Very dry. Temperature scenarios: Normal, Warm, Hot
+        - tradeoff direction `uncertain`: Too close to call
+      required: [contract_version, disclaimer, interval, evidence_kinds, access_tiers, null_reasons,
+                 needs_local_judgment, scores, priorities, zone_hazards, calendar_hazards, risk_levels,
+                 rainfall_scenarios, temperature_scenarios, cover_states, job_stages, equipment,
+                 tradeoff_directions, tradeoff_rule, crop_fit_statuses, crop_fit_checks, layer_kinds,
+                 detection_bases]
+      properties:
+        contract_version:
+          type: string
+        disclaimer:
+          type: string
+        interval:
+          type: object
+          required: [id, description]
+          properties:
+            id:
+              const: p10_p90
+            description:
+              type: string
+        evidence_kinds:
+          type: array
+          description: Exactly four.
+          minItems: 4
+          maxItems: 4
+          items:
+            $ref: '#/components/schemas/Label'
+        access_tiers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Label'
+        null_reasons:
+          type: array
+          description: The label for `out_of_coverage` is "No coverage".
+          items:
+            $ref: '#/components/schemas/Label'
+        needs_local_judgment:
+          $ref: '#/components/schemas/Label'
+        scores:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScoreDefinition'
+        priorities:
+          type: array
+          items:
+            $ref: '#/components/schemas/Label'
+        zone_hazards:
+          type: array
+          items:
+            $ref: '#/components/schemas/Label'
+        calendar_hazards:
+          type: array
+          items:
+            $ref: '#/components/schemas/Label'
+        risk_levels:
+          type: array
+          items:
+            $ref: '#/components/schemas/Label'
+        rainfall_scenarios:
+          type: array
+          items:
+            $ref: '#/components/schemas/Label'
+        temperature_scenarios:
+          type: array
+          items:
+            $ref: '#/components/schemas/Label'
+        cover_states:
+          type: array
+          items:
+            $ref: '#/components/schemas/Label'
+        job_stages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Label'
+        equipment:
+          type: array
+          items:
+            $ref: '#/components/schemas/Label'
+        tradeoff_directions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Label'
+        crop_fit_statuses:
+          type: array
+          items:
+            $ref: '#/components/schemas/Label'
+        crop_fit_checks:
+          type: array
+          description: Each description states the rule that decides the status, with its thresholds.
+          items:
+            $ref: '#/components/schemas/Label'
+        layer_kinds:
+          type: array
+          items:
+            $ref: '#/components/schemas/Label'
+        detection_bases:
+          type: array
+          items:
+            $ref: '#/components/schemas/Label'
+        tradeoff_rule:
+          type: object
+          description: The thresholds that decide `Tradeoff.direction`.
+          required: [better_share_min, worse_share_max, similar_score_delta_max, description]
+          properties:
+            better_share_min:
+              type: number
+              description: At or above this share of paired runs won, the direction is `better`.
+            worse_share_max:
+              type: number
+              description: At or below this share, the direction is `worse`.
+            similar_score_delta_max:
+              type: number
+              description: Below this absolute median score difference, the direction is `similar`.
+            description:
+              type: string
+              description: The rule in plain words.
+
+    # ---------------------------------------------------------------- system
+    Health:
+      type: object
+      required: [status, contract_version]
+      properties:
+        status:
+          const: ok
+        contract_version:
+          type: string
+    ProblemField:
+      type: object
+      required: [field, message]
+      properties:
+        field:
+          type: string
+          description: JSON pointer into the request body.
+        message:
+          type: string
+    Problem:
+      type: object
+      required: [type, title, status, detail]
+      properties:
+        type:
+          type: string
+          description: Stable error identifier, for example `field_too_large`, `rotation_required`, `unknown_crop`, `not_found`, `not_finished`, `insufficient_candidates`, `internal`.
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProblemField'

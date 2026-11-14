@@ -1,0 +1,20 @@
+# Development workspace (testing, contracts, data, docs, design, sandbox)
+development/
+
+# Secrets
+.env
+.env.*
+
+# Local tooling, build artifacts, and caches
+.remember/
+.playwright-mcp/
+.pytest_cache/
+.vite/
+node_modules/
+dist/
+__pycache__/
+*.pyc
+.venv/
+backend/var/
+*.local
+*.log

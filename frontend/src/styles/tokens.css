@@ -1,0 +1,129 @@
+/* Generated from design/tokens.json by scripts/build-tokens.mjs. Do not edit. */
+:root {
+  --font-display: 'Schibsted Grotesk', system-ui, sans-serif;
+  --font-body: 'Figtree', system-ui, sans-serif;
+  --size-page-title: clamp(2rem, 4.4vw, 2.875rem);
+  --size-answer: clamp(2.375rem, 5.2vw, 3.75rem);
+  --size-card-title: 1.625rem;
+  --size-panel-title: 1.5rem;
+  --size-body: 1rem;
+  --size-secondary: 0.9375rem;
+  --size-caption: 0.875rem;
+  --size-min: 0.8125rem;
+  --line-text: 1.5;
+  --line-headline: 1.05;
+  --tracking-heading: -0.015em;
+  --tracking-display: -0.025em;
+  --radius-card: 28px;
+  --radius-strip: 22px;
+  --radius-panel: 16px;
+  --radius-button: 14px;
+  --radius-control: 12px;
+  --radius-cell: 6px;
+  --radius-bar: 4px;
+  --space-gutter: clamp(16px, 4vw, 32px);
+  --space-card-pad: clamp(22px, 3vw, 36px);
+  --space-gap: 24px;
+  --space-page-max: 1240px;
+  --target-min: 44px;
+  --target-primary: 52px;
+  --motion-duration: 160ms;
+  --motion-easing: ease-out;
+}
+
+:root,
+:root[data-theme='light'] {
+  color-scheme: light;
+  --ground: #F3F5F0;
+  --card: #FFFFFF;
+  --border: #E2E7DF;
+  --control-border: #B9C4BA;
+  --ink: #13231B;
+  --on-ink: #FFFFFF;
+  --text-2: #46554D;
+  --track: #EEF1EB;
+  --green: #1D6A46;
+  --on-green: #FFFFFF;
+  --green-deep: #123B2A;
+  --on-deep: #FFFFFF;
+  --on-deep-2: #D3E3D9;
+  --green-tint: #E6EFE9;
+  --on-green-tint: #123B2A;
+  --amber: #F4B740;
+  --on-amber: #13231B;
+  --amber-tint: #FBE9C4;
+  --on-amber-tint: #5A3D00;
+  --risk-high: #B5490F;
+  --on-risk-high: #FFFFFF;
+  --risk-some: #F2C29C;
+  --alert: #B5490F;
+  --water: #2B6CB0;
+  --bar-neutral: #8A978F;
+  --live: #2E9B62;
+  --brand-word: #123B2A;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --ground: #22242D;
+  --card: #2B2E3A;
+  --border: #3E4354;
+  --control-border: #7A8299;
+  --ink: #F1F3F9;
+  --on-ink: #181A22;
+  --text-2: #B8BFD1;
+  --track: #353948;
+  --green: #47B881;
+  --on-green: #151821;
+  --green-deep: #174935;
+  --on-deep: #FFFFFF;
+  --on-deep-2: #D6E8DF;
+  --green-tint: #1F3D32;
+  --on-green-tint: #D6EFE2;
+  --amber: #F4B740;
+  --on-amber: #181A22;
+  --amber-tint: #453616;
+  --on-amber-tint: #FDECC8;
+  --risk-high: #EB7A47;
+  --on-risk-high: #181A22;
+  --risk-some: #824E2D;
+  --alert: #FF9E87;
+  --water: #63A8EE;
+  --bar-neutral: #959CB0;
+  --live: #3AB87C;
+  --brand-word: #F3F5F0;
+}
+
+@media print {
+  :root,
+  :root[data-theme] {
+    color-scheme: light;
+    --ground: #F3F5F0;
+    --card: #FFFFFF;
+    --border: #E2E7DF;
+    --control-border: #B9C4BA;
+    --ink: #13231B;
+    --on-ink: #FFFFFF;
+    --text-2: #46554D;
+    --track: #EEF1EB;
+    --green: #1D6A46;
+    --on-green: #FFFFFF;
+    --green-deep: #123B2A;
+    --on-deep: #FFFFFF;
+    --on-deep-2: #D3E3D9;
+    --green-tint: #E6EFE9;
+    --on-green-tint: #123B2A;
+    --amber: #F4B740;
+    --on-amber: #13231B;
+    --amber-tint: #FBE9C4;
+    --on-amber-tint: #5A3D00;
+    --risk-high: #B5490F;
+    --on-risk-high: #FFFFFF;
+    --risk-some: #F2C29C;
+    --alert: #B5490F;
+    --water: #2B6CB0;
+    --bar-neutral: #8A978F;
+    --live: #2E9B62;
+    --brand-word: #123B2A;
+  }
+}
