@@ -1,5 +1,5 @@
 import { Analytics } from '@vercel/analytics/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type MouseEvent } from 'react';
 import { connect, type Connection } from './api/source';
 import { MetaContext } from './app/context';
 import { Planner } from './app/Planner';
@@ -18,6 +18,15 @@ function storedTheme(): ThemeName {
   } catch {
     return DEFAULT_THEME;
   }
+}
+
+// Focus moves to the content without writing #content into the address, which names the screen.
+function skipToContent(event: MouseEvent<HTMLAnchorElement>) {
+  const content = document.getElementById('content');
+  if (!content) return;
+  event.preventDefault();
+  content.focus({ preventScroll: true });
+  content.scrollIntoView({ block: 'start', behavior: 'instant' });
 }
 
 export default function App() {
@@ -62,7 +71,7 @@ export default function App() {
 
   return (
     <>
-      <a className="skip-link" href="#content">
+      <a className="skip-link" href="#content" onClick={skipToContent}>
         Skip to content
       </a>
       {boot.status === 'ready' ? (

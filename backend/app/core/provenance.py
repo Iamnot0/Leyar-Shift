@@ -238,8 +238,8 @@ NOT_CONFIGURED_MESSAGES = {
     "nldas": "NLDAS needs an approval on the NASA Earthdata account that has not been given. NASA POWER is used instead.",
     "openet": "OpenET needs its own key, which is not set. The water crops need comes from the water model alone.",
     "ecostress": "ECOSTRESS has not been loaded for this location in this version.",
-    "grace_fo": "GRACE water storage is not set up in this version. Where the United States has wells nearby, their measured water levels are shown instead.",
-    "smap_l4": "SMAP soil moisture is not set up in this version. Soil moisture comes from NASA POWER.",
+    "grace_fo": "GRACE water storage is not used in this version. Where the United States has wells nearby, their measured water levels are shown instead.",
+    "smap_l4": "SMAP soil moisture is not used in this version. Soil moisture comes from NASA POWER.",
 }
 
 
