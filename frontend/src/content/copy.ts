@@ -7,6 +7,8 @@ import type { FieldProblem } from '../lib/geo';
 export const REMINDER = 'Leyar Shift helps you decide. It doesn’t decide for you. Talk it through with your local agronomist first.';
 
 export const SETUP_STEPS = ['Your field', 'Equipment', 'What matters most', 'What you grow'] as const;
+/** The page heading on each setup step. The card under it asks the step's question. */
+export const SETUP_TITLES = ['Your field', 'Your equipment', 'Your priorities', 'Your crops'] as const;
 export const NEXT_STEP_WORDS = ['your equipment', 'what matters most', 'what you grow'] as const;
 
 export const SCORE_WORDS: Record<ScoreId, string> = {

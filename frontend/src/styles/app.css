@@ -3291,6 +3291,21 @@ details.drawer[open] > summary::after {
 }
 
 @media (max-width: 380px) {
+  /* Logo, live status and theme button share one row down to 320px. */
+  .header {
+    column-gap: 10px;
+  }
+
+  .brand {
+    gap: 8px;
+    font-size: 1.1875rem;
+  }
+
+  .brand__mark {
+    width: 30px;
+    height: 30px;
+  }
+
   .stepper {
     grid-template-columns: minmax(0, 1fr);
   }

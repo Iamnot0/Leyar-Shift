@@ -14,7 +14,7 @@ import { Card, CardState, Reminder } from '../components/ui/kit';
 import { Segmented } from '../components/ui/Segmented';
 import { SourceList } from '../components/ui/SourceList';
 import { coveredCount } from '../lib/evidence';
-import { FIELD_PROBLEM_COPY, NEXT_STEP_WORDS, PRIORITY_WORDS, SETUP_STEPS, WATER_OPTIONS } from '../content/copy';
+import { FIELD_PROBLEM_COPY, NEXT_STEP_WORDS, PRIORITY_WORDS, SETUP_STEPS, SETUP_TITLES, WATER_OPTIONS } from '../content/copy';
 import { formatHectares, formatNumber, numberWord, sentenceCase } from '../lib/format';
 import { MAX_FIELD_HA, MIN_FIELD_HA, boundsOf, cornersOf, fieldProblem, polygonFromCorners, ringAreaHa, ringCentroid, squareAround, type LngLat } from '../lib/geo';
 import type { PictureProps } from '../results/FieldCard';
@@ -1147,7 +1147,7 @@ export function SetupScreen(props: SetupScreenProps) {
       )}
       <header className="page-head">
         <h1 className="page-title" ref={titleRef} tabIndex={-1}>
-          Field Location
+          {SETUP_TITLES[step]}
         </h1>
         <p className="lead">{sentenceCase(numberWord(SETUP_STEPS.length))} short questions. Your answers decide which rotations we compare for you.</p>
       </header>
