@@ -144,15 +144,15 @@ def _runs(analysis: dict) -> dict:
         facts.append(_fact("Weather record", f"{record['period']['start'][:4]} to {record['period']['end'][:4]}{years}",
                            "scenario.rainfall.quantity.period", None, record["dataset_ids"]))
     facts += [
-        _fact("Runs", f"{uncertainty['n_runs']} paired runs", "uncertainty.n_runs", uncertainty["n_runs"]),
-        _fact("How each run is drawn", uncertainty["method"], "uncertainty.method"),
+        _fact("Weather years tried", f"{uncertainty['n_runs']} weather years, the same for every rotation", "uncertainty.n_runs", uncertainty["n_runs"]),
+        _fact("How each one is drawn", uncertainty["method"], "uncertainty.method"),
     ]
     facts += [_fact(driver["label"], f"{_percent(driver['share'])} of the spread in the overall score", f"uncertainty.drivers[id={driver['id']}].share",
                     driver["share"], group="What moves the overall score")
               for driver in uncertainty["drivers"] if driver["share"] is not None]
     return _step("runs", "Ran every rotation through the same weather",
-                 "Each run steps a daily soil water budget (FAO-56) through one year drawn from the weather record. "
-                 "Every rotation gets the same draws in each run, so they are compared like for like.", facts)
+                 "Each weather year steps a daily soil water budget (FAO-56) through one year drawn from the weather record. "
+                 "Every rotation gets the same weather years, so they are compared like for like.", facts)
 
 
 def _scores(ranked: list[dict]) -> dict:
@@ -162,7 +162,7 @@ def _scores(ranked: list[dict]) -> dict:
             facts.append(_fact(_measure(score), _score_text(score), f"rotations[id={rotation['id']}].scores[id={score['id']}].value", score["value"],
                                _score_datasets(score), _name(rotation)))
     return _step("scores", "Scored each rotation",
-                 "Each measure becomes a score out of 100, where higher is always better. The middle score of all runs is shown, "
+                 "Each measure becomes a score out of 100, where higher is always better. The middle score of all the weather years is shown, "
                  "with the physical amount behind it.", facts)
 
 
@@ -192,11 +192,11 @@ def _ranking(analysis: dict, ranked: list[dict]) -> dict:
         if overall["value"] is None:
             facts.append(_fact("Not ranked", overall["null_explanation"] or "No overall score.", f"{source}.null_explanation", group=group))
             continue
-        spread = f", {_whole(overall['low'])} to {_whole(overall['high'])} in most runs" if overall["low"] is not None and overall["high"] is not None else ""
+        spread = f", {_whole(overall['low'])} to {_whole(overall['high'])} in most weather years" if overall["low"] is not None and overall["high"] is not None else ""
         facts.append(_fact(f"Rank {overall['rank']}", f"{_score(overall['value'])}{spread}", f"{source}.value", overall["value"], group=group))
         stability = overall["rank_stability"]
         if stability["share_ranked_first"] is not None:
-            facts.append(_fact("Came out first in", f"{_percent(stability['share_ranked_first'])} of the {stability['n_runs']} runs",
+            facts.append(_fact("Came out first in", f"{_percent(stability['share_ranked_first'])} of the {stability['n_runs']} weather years",
                                f"{source}.rank_stability.share_ranked_first", stability["share_ranked_first"], group=group))
     best, current = _best(ranked), _current(analysis)
     if best:
@@ -211,9 +211,9 @@ def _ranking(analysis: dict, ranked: list[dict]) -> dict:
             facts.append(_fact(labels[tradeoff["score_id"]][0], tradeoff["text"],
                                f"rotations[id={best['id']}].tradeoffs[score_id={tradeoff['score_id']}].share_of_runs_better",
                                tradeoff["share_of_runs_better"], group=f"{best["label"]} against what you grow now"))
-    return _step("ranking", "Ranked the rotations across the runs",
-                 "In each run a rotation's overall score is the weighted mean of its scores. Rotations are ranked by their middle overall score, "
-                 "and the share of runs each one came out first shows how settled the ranking is.", facts)
+    return _step("ranking", "Ranked the rotations across the weather years",
+                 "In each weather year a rotation's overall score is the weighted mean of its scores. Rotations are ranked by their middle overall score, "
+                 "and the share of weather years each one came out first in shows how settled the ranking is.", facts)
 
 
 # ---------------------------------------------------------------- the summary
@@ -257,7 +257,7 @@ def _engine_summary(analysis: dict, ranked: list[dict]) -> str:
         parts = [f"{best["label"]} comes out first at {_score(overall['value'])}{against}."]
     stability = overall["rank_stability"]
     if stability["share_ranked_first"] is not None:
-        parts.append(f"It came out first in {_percent(stability['share_ranked_first'])} of the {stability['n_runs']} runs.")
+        parts.append(f"It came out first in {_percent(stability['share_ranked_first'])} of the {stability['n_runs']} weather years.")
     top = next((weight for weight in analysis["weights"] if weight["rank"] == 1), None)
     if top:
         parts.append(f"Your first priority, {_lower(PRIORITIES[top['priority']])}, carries {_percent(top['weight'])} of the overall score.")

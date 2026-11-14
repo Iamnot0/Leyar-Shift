@@ -377,7 +377,7 @@ def build(request: dict[str, Any], gathered: Gathered, results: list[Evaluated],
         "weights": [{"priority": priority, "score_id": score_id, "rank": farmer["priorities"].index(priority) + 1 if priority in farmer["priorities"] else None,
                      "weight": round(weights[score_id], 4)} for priority, score_id in config.PRIORITY_TO_SCORE.items()],
         "rotations": built, "field_evidence": evidence, "series": series, "comparisons": pairs, "zones": zone_summary,
-        "uncertainty": {"method": f"{draws.n} paired runs. Each run draws a weather year from the {int(gathered.climate.years[0])} to {int(gathered.climate.years[-1])} record, a soil water-holding value from the survey's range, crop coefficients and planting dates from their published ranges, and one of the rainfall records.",
+        "uncertainty": {"method": f"{draws.n} weather years, the same for every rotation. Each draws a year from the {int(gathered.climate.years[0])} to {int(gathered.climate.years[-1])} record, a soil water-holding value from the survey's range, crop coefficients and planting dates from their published ranges, and one of the rainfall records.",
                         "n_runs": draws.n, "interval": config.INTERVAL[0], "seed": seed_hex[:16], "drivers": drivers(current, draws)},
         "gaps": gaps, "currency": {"code": gathered.currency.code, "name": gathered.currency.name}, "ranking_note": ranking_note, "close_call": close_call,
     }

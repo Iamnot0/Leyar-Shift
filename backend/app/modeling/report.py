@@ -21,7 +21,7 @@ SCORE_LABELS = {
                       "How much water the crops want that rain and the soil do not supply."),
     "soil_health": ("Soil health", None, None, None, True,
                     "Weeks of living roots, weeks of soil cover, the share of legumes and the number of crop families, combined."),
-    "erosion": ("Erosion exposure", "Bare-soil weeks in the three wettest months", "weeks/yr", False, False,
+    "erosion": ("Soil washing away", "Bare-soil weeks in the three wettest months", "weeks/yr", False, False,
                 "How long the soil lies uncovered when the heaviest rain usually comes."),
     "climate_risk": ("Weather risk", "Heat and frost days while a crop is exposed", "days/yr", False, False,
                      "Days of damaging heat or frost that fall while a crop is in the ground."),
@@ -178,7 +178,7 @@ class Builder:
             explanation = f"Something is growing for about {np.median(sim.living_weeks):.0f} weeks a year, across {len(families)} crop famil{'y' if len(families) == 1 else 'ies'}."
         elif score_id == "erosion":
             physical = self.modeled(sim.bare_wet_weeks, "weeks/yr", self.weather + self.calendars, needs_local=True,
-                                    note="Assumes stubble is left on the surface. This is exposure to rain, not a soil-loss figure, and wind erosion is judged separately.")
+                                    note="Assumes stubble is left on the surface. It counts weeks of bare soil in the rain, not tonnes of soil lost, and wind erosion is judged separately.")
             components = [{"id": "bare_windy_weeks", "label": "Bare-soil weeks in the three windiest months", "higher_is_better": False,
                            "quantity": self.modeled(sim.bare_windy_weeks, "weeks/yr", self.weather + self.calendars)}]
             if self.g.slope_percent is not None and self.g.grid.field_mean(self.g.slope_percent) is not None:
@@ -320,7 +320,7 @@ class Builder:
         physical_of = {"water_balance": lambda e: e.sim.water_need, "erosion": lambda e: e.sim.bare_wet_weeks,
                        "climate_risk": lambda e: e.sim.heat_days + e.sim.frost_days, "economics": lambda e: e.revenue}
         units = {"water_balance": "mm/yr", "erosion": "weeks/yr", "climate_risk": "days/yr"}
-        words = {"water_balance": "water need", "soil_health": "soil health", "erosion": "bare soil in the wettest months", "climate_risk": "heat and frost exposure",
+        words = {"water_balance": "water need", "soil_health": "soil health", "erosion": "bare soil in the wettest months", "climate_risk": "heat and frost while a crop is growing",
                  "pest_break": "pest-cycle break", "economics": "gross revenue"}
         out = []
         for score_id in config.SCORE_ORDER:
