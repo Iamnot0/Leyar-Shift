@@ -33,6 +33,13 @@ SCORE_LABELS = {
 SCORE_PRIORITY = {score: priority for priority, score in config.PRIORITY_TO_SCORE.items()}
 
 
+def _years_in_ten(share: float) -> str:
+    """'about 3 years out of 10', and never 'about 0' for a share that is small but real."""
+    if share <= 0:
+        return "none of the years on record"
+    return f"about {round(share * 10)} years out of 10" if share >= 0.05 else "fewer than 1 year in 10"
+
+
 def _pct(values: np.ndarray) -> tuple[float, float, float]:
     return float(np.median(values)), float(np.percentile(values, LOW)), float(np.percentile(values, HIGH))
 
@@ -266,7 +273,7 @@ class Builder:
                              period=WEATHER_PERIOD)
             low_share, high_share = config.CROP_FIT_FROST_SHARES
             status = "fits" if share < low_share else "does_not_fit" if share >= high_share else "strained"
-            checks.append(("frost", status, frost, f"Frost falls while {name.lower()} is emerging or setting grain in about {round(share * 10)} years out of 10.",
+            checks.append(("frost", status, frost, f"Frost falls while {name.lower()} is emerging or setting grain in {_years_in_ten(share)}.",
                            _past(status, share, low_share, high_share)))
 
             if stats.water_need is None:

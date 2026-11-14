@@ -84,7 +84,7 @@ export function FieldCard(props: FieldCardProps & { analysis: Analysis }) {
       <div className="tile-grid">
         <Tile label="Field size" value={`${formatHectares(areaHa(field.geometry))} ha`} />
         <Tile label="Data we could find" value={`${coveredCount(analysis.datasets)} of ${analysis.datasets.length} sources`} />
-        <Tile label="Water your crops use now" value={waterWords} />
+        <Tile label="Water needed now, beyond rain" value={waterWords} />
         <Tile label="Bare soil now" value={bareWords} />
       </div>
       {measuredUse && (

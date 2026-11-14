@@ -157,19 +157,26 @@ function headToHead(best: Rotation, current: Rotation, currency: Analysis['curre
     .slice(0, HEAD_TO_HEAD_ROWS);
 }
 
-const FAILURE_CAUSE_WORDS = { frost: 'frost', heat: 'heat', water: 'too dry' } as const;
+const FAILURE_CAUSE_WORDS = { frost: 'frost', heat: 'heat', water: 'drought' } as const;
 const FAILURE_CAUSES = Object.keys(FAILURE_CAUSE_WORDS) as (keyof typeof FAILURE_CAUSE_WORDS)[];
+const UNCOUNTED_WORDS = {
+  frost: 'Frost failures are not counted here.',
+  // Watered or flooded crops run cooler than the air the weather grid reports.
+  heat: 'Heat failures are counted only for rain-fed crops, since watered and flooded crops stay cooler than the air.',
+  water: 'Drought failures are not counted here.',
+} as const;
 
-/** "Main limit here: water. Would likely fail in 3 of 25 years: frost 2, too dry 1." */
+/** "Main limit here: water. Would likely fail in 3 of 25 years: 2 from frost, 1 from drought." */
 function limitAndFailure(fit: CropFit, limit: string | null, driestYearsOnly: boolean): string {
   const sentences = limit ? [`Main limit here: ${limit.toLowerCase()}.`] : [];
   const { failure } = fit;
   if (failure) {
     const years = driestYearsOnly ? `the ${failure.years_total} driest years` : `${failure.years_total} years`;
-    const causes = FAILURE_CAUSES.flatMap((cause) => (failure.by_cause[cause] ? [`${FAILURE_CAUSE_WORDS[cause]} ${failure.by_cause[cause]}`] : []));
-    const unjudged = FAILURE_CAUSES.filter((cause) => failure.by_cause[cause] === null);
-    sentences.push(`Would likely fail in ${failure.years_failed} of ${years}${causes.length > 0 ? `: ${causes.join(', ')}` : ''}.`);
-    if (unjudged.length > 0) sentences.push(`${sentenceCase(joinList(unjudged))} not judged.`);
+    const causes = FAILURE_CAUSES.filter((cause) => failure.by_cause[cause]);
+    if (failure.years_failed === 0) sentences.push(`No failed season in ${years}.`);
+    else if (causes.length === 1) sentences.push(`Would likely fail in ${failure.years_failed} of ${years}, from ${FAILURE_CAUSE_WORDS[causes[0]]}.`);
+    else sentences.push(`Would likely fail in ${failure.years_failed} of ${years}: ${joinList(causes.map((cause) => `${failure.by_cause[cause]} from ${FAILURE_CAUSE_WORDS[cause]}`))}.`);
+    for (const cause of FAILURE_CAUSES) if (failure.by_cause[cause] === null) sentences.push(UNCOUNTED_WORDS[cause]);
   }
   return sentences.join(' ');
 }
@@ -512,7 +519,7 @@ export function SourcesCard({ analysis, detailId, detailOpen, onToggleDetail }: 
         </ul>
         {tally.missing > 0 && (
           <p className="caption">
-            {tally.missing} more could not be worked out for this field. Each one says why where it would have appeared.
+            {tally.missing} more could not be worked out for this field. The reason shows where {tally.missing === 1 ? 'it' : 'each'} would have appeared.
           </p>
         )}
       </div>
