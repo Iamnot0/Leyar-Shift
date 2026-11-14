@@ -16,6 +16,9 @@ from app.adapters.base import Allowance, Fetcher, SourceState
 from app.core import config
 from app.core.config import Settings
 from app.core.provenance import EQUIPMENT_LABELS
+
+IMERG_NOT_READ = ("IMERG monthly rainfall takes several minutes to read for a new place, longer than this site's server allows. "
+                  "Rainfall comes from NASA POWER and ERA5.")
 from app.fusion.grid import FieldError, Grid, build_grid, read_field
 from app.modeling import crops, rotations, simulate
 from app.modeling.crops import Crop, CropLibrary
@@ -201,7 +204,8 @@ def gather(request: dict[str, Any], ctx: Context, progress: Callable[[str], None
     token = settings.key("EARTHDATA_TOKEN")
     openet_key = settings.key("OPENET_API_KEY")
     with ThreadPoolExecutor(max_workers=12) as pool:
-        imerg_f = pool.submit(imerg.monthly_rain, fetcher, token, lon, lat, today=ctx.today)
+        imerg_f = (pool.submit(imerg.monthly_rain, fetcher, token, lon, lat, today=ctx.today) if settings.read_imerg
+                   else pool.submit(lambda: ({}, SourceState.not_configured("gpm_imerg", IMERG_NOT_READ))))
         soil_f = pool.submit(soil.fetch_ssurgo, fetcher, grid) if place.conterminous_us else pool.submit(soil.fetch_soilgrids, fetcher, lon, lat)
         elev_f = pool.submit(raster.elevation, fetcher, grid)
         cdl_hist_f = pool.submit(cdl.field_history, fetcher, grid) if place.conterminous_us else None
@@ -210,7 +214,7 @@ def gather(request: dict[str, Any], ctx: Context, progress: Callable[[str], None
         s2_f = pool.submit(raster.ndvi_scenes, fetcher, grid, today=ctx.today)
         modis_f = pool.submit(raster.greenness_history, fetcher, grid, today=ctx.today)
         openet_f = pool.submit(openet.monthly_water_use, fetcher, openet_key, grid, today=ctx.today, allowance=Allowance(
-            settings.allowances_dir, "openet", config.OPENET_REQUESTS_PER_MONTH, "month")) if place.conterminous_us else None
+            settings.records, "openet", config.OPENET_REQUESTS_PER_MONTH, "month")) if place.conterminous_us else None
         wells_f = pool.submit(groundwater.fetch_well_trend, fetcher, lon, lat, since=2000) if place.conterminous_us else None
 
         gathered.imerg, states["gpm_imerg"] = imerg_f.result()

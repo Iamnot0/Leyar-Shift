@@ -35,7 +35,7 @@ async def _lifespan(_: FastAPI):
 FREE_PATHS = ("/v1/health", "/v1/meta", "/openapi.json")
 
 
-def _limit_requests(app: FastAPI, per_minute: int) -> None:
+def _limit_requests(app: FastAPI, per_minute: int, behind_proxy: bool) -> None:
     """Cap what one client may ask of the routes that fetch or compute. Polling a job is never counted."""
     recent: dict[str, deque[float]] = defaultdict(deque)
     lock = threading.Lock()
@@ -45,7 +45,9 @@ def _limit_requests(app: FastAPI, per_minute: int) -> None:
         path = request.url.path
         polling = request.method == "GET" and path.startswith("/v1/analyses/")
         if per_minute > 0 and request.method in ("GET", "POST") and path.startswith("/v1/") and path not in FREE_PATHS and not polling:
-            client, now = request.client.host if request.client else "unknown", time.monotonic()
+            # Behind Vercel the peer is its proxy; the visitor is the first address Vercel forwards.
+            forwarded = request.headers.get("x-forwarded-for", "").split(",")[0].strip() if behind_proxy else ""
+            client, now = forwarded or (request.client.host if request.client else "unknown"), time.monotonic()
             with lock:
                 window = recent[client]
                 while window and now - window[0] >= 60.0:
@@ -63,7 +65,7 @@ def create_app() -> FastAPI:
     app = FastAPI(title="Leyar Shift Rotation API", version=config.CONTRACT_VERSION, lifespan=_lifespan)
     # The published contract is the API description; it is served as written, never regenerated from code.
     app.openapi = contract  # type: ignore[method-assign]
-    _limit_requests(app, get_settings().rate_limit_per_minute)
+    _limit_requests(app, get_settings().rate_limit_per_minute, get_settings().behind_proxy)
     app.add_middleware(CORSMiddleware, allow_origins=list(get_settings().cors_origins), allow_methods=["GET", "POST"], allow_headers=["*"],
                        expose_headers=["Location"])
     for module in (system, reference, analyses):

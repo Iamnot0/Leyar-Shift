@@ -8,6 +8,8 @@ from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
 
+from app.core.records import Records, records
+
 BACKEND_ROOT = Path(__file__).resolve().parents[2]
 REPO_ROOT = BACKEND_ROOT.parent
 
@@ -165,18 +167,22 @@ class Settings:
     rate_limit_per_minute: int = RATE_LIMIT_PER_MINUTE
     recordings_dir: Path | None = None
     keys: dict[str, str] = field(default_factory=dict)
+    # "disk" on one long-lived server; "vercel" where each request may reach a different instance.
+    store: str = "disk"
+    # Run an analysis inside the request that asks for it, for hosts that stop work once a response is sent.
+    inline_jobs: bool = False
+    # IMERG takes minutes to read for a new place, in the background; hosts that stop work after a response cannot read it.
+    read_imerg: bool = True
+    # Behind a proxy that sets X-Forwarded-For, such as Vercel's, the visitor's address comes from that header.
+    behind_proxy: bool = False
 
     @property
     def http_cache_dir(self) -> Path:
         return self.recordings_dir or self.var_dir / "cache" / "http"
 
     @property
-    def jobs_dir(self) -> Path:
-        return self.var_dir / "jobs"
-
-    @property
-    def allowances_dir(self) -> Path:
-        return self.var_dir / "allowances"
+    def records(self) -> Records:
+        return records(self.store, self.var_dir)
 
     def key(self, name: str) -> str | None:
         return os.environ.get(name) or self.keys.get(name)
@@ -204,4 +210,9 @@ def get_settings() -> Settings:
         rate_limit_per_minute=int(os.environ.get("FIELDSHIFT_RATE_LIMIT_PER_MINUTE", RATE_LIMIT_PER_MINUTE)),
         recordings_dir=Path(recordings) if recordings else None,
         keys=_read_keys(keys_file),
+        cors_origins=tuple(filter(None, os.environ.get("FIELDSHIFT_CORS_ORIGINS", "").split(","))) or Settings.cors_origins,
+        store=os.environ.get("FIELDSHIFT_STORE", "disk"),
+        inline_jobs=os.environ.get("FIELDSHIFT_INLINE_JOBS") == "1",
+        read_imerg=os.environ.get("FIELDSHIFT_READ_IMERG", "1") == "1",
+        behind_proxy=os.environ.get("FIELDSHIFT_BEHIND_PROXY") == "1",
     )

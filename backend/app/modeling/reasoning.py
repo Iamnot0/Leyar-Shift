@@ -12,13 +12,13 @@ import math
 import re
 import threading
 from collections.abc import Callable
-from pathlib import Path
 from typing import Any
 
 import httpx
 
 from app.core import config
 from app.core.config import Settings
+from app.core.records import Records
 from app.core.provenance import ACCESS_LABELS, CROP_FIT_CHECK_LABELS, CROP_FIT_STATUS_LABELS, NULL_LABELS, PRIORITY_LABELS
 
 ANALYSIS_ID = re.compile(r"[0-9a-f]{32}")
@@ -68,22 +68,14 @@ _locks: dict[str, threading.Lock] = {}
 
 def build(analysis: dict[str, Any], settings: Settings, complete: Complete | None = None) -> dict[str, Any]:
     """The engine's steps for one finished analysis, and a summary of its ranking."""
-    cache = _cache_path(settings, analysis["analysis_id"])
+    if not ANALYSIS_ID.fullmatch(analysis["analysis_id"]):
+        raise ValueError("Not an analysis id")
+    cache = (settings.records, f"summaries/{analysis['analysis_id']}")
     ranked = sorted(analysis["rotations"], key=lambda rotation: (rotation["overall"]["rank"] is None, rotation["overall"]["rank"] or 0))
     steps = [_field(analysis), _conditions(analysis), _crop_fit(analysis), _runs(analysis), _scores(ranked),
              _weights(analysis), _ranking(analysis, ranked)]
     brief = [_line(fact) for step in steps if step["id"] in BRIEF_STEPS for fact in step["facts"]]
     return {"analysis_id": analysis["analysis_id"], "steps": steps, "summary": _summary(analysis, ranked, brief, cache, settings, complete)}
-
-
-def _cache_path(settings: Settings, analysis_id: str) -> Path:
-    if not ANALYSIS_ID.fullmatch(analysis_id):
-        raise ValueError("Not an analysis id")
-    folder = (settings.var_dir / "cache" / "reasoning").resolve()
-    path = (folder / f"{analysis_id}.json").resolve()
-    if not path.is_relative_to(folder):
-        raise ValueError("The summary cache path leaves its folder")
-    return path
 
 
 # ---------------------------------------------------------------- the steps
@@ -227,7 +219,7 @@ def _ranking(analysis: dict, ranked: list[dict]) -> dict:
 # ---------------------------------------------------------------- the summary
 
 
-def _summary(analysis: dict, ranked: list[dict], brief: list[str], cache: Path, settings: Settings, complete: Complete | None) -> dict:
+def _summary(analysis: dict, ranked: list[dict], brief: list[str], cache: tuple[Records, str], settings: Settings, complete: Complete | None) -> dict:
     engine_text = _engine_summary(analysis, ranked)
     if complete is None:
         key = settings.key(KEY_NAME) if settings.fetch_mode == "live" else None
@@ -276,19 +268,16 @@ def _engine_summary(analysis: dict, ranked: list[dict]) -> str:
     return " ".join(parts)
 
 
-def _reply(cache: Path, brief: list[str], complete: Complete) -> str:
-    """The model's reply, asked once per analysis and set of facts and kept on disk."""
+def _reply(cache: tuple[Records, str], brief: list[str], complete: Complete) -> str:
+    """The model's reply, asked once per analysis and set of facts and kept as a record."""
+    records, key = cache
     digest = hashlib.sha256(json.dumps([config.SUMMARY_MODEL, PROMPT, brief]).encode()).hexdigest()
-    with _locks.setdefault(cache.stem, threading.Lock()):
-        if cache.exists():
-            kept = json.loads(cache.read_text())
-            if isinstance(kept, dict) and kept.get("digest") == digest:
-                return kept["reply"]
+    with _locks.setdefault(key, threading.Lock()):
+        kept = records.get(key)
+        if isinstance(kept, dict) and kept.get("digest") == digest:
+            return kept["reply"]
         reply = complete(PROMPT, "Facts:\n" + "\n".join(f"- {line}" for line in brief))
-        cache.parent.mkdir(parents=True, exist_ok=True)
-        temporary = cache.with_suffix(".tmp")
-        temporary.write_text(json.dumps({"digest": digest, "model": config.SUMMARY_MODEL, "reply": reply}))
-        temporary.replace(cache)
+        records.put(key, {"digest": digest, "model": config.SUMMARY_MODEL, "reply": reply})
         return reply
 
 

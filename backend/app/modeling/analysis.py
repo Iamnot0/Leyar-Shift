@@ -139,7 +139,7 @@ def layers(lat: float, lon: float, ctx: Context) -> dict:
 def forecast_days(lat: float, lon: float, ctx: Context) -> tuple[list[meteomatics.ForecastDay], str | None, SourceState]:
     return meteomatics.outlook(ctx.fetcher, ctx.settings.key("METEOMATICS_USERNAME"), ctx.settings.key("METEOMATICS_PASSWORD"),
                                lon, lat, first=ctx.today, days=config.OUTLOOK_DAYS,
-                               allowance=Allowance(ctx.settings.allowances_dir, "meteomatics", config.METEOMATICS_REQUESTS_PER_DAY, "day"))
+                               allowance=Allowance(ctx.settings.records, "meteomatics", config.METEOMATICS_REQUESTS_PER_DAY, "day"))
 
 
 def outlook(lat: float, lon: float, ctx: Context, fetched: tuple[list[meteomatics.ForecastDay], str | None, SourceState] | None = None) -> dict:

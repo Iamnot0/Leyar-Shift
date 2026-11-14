@@ -21,6 +21,7 @@ import httpx
 import numpy as np
 
 from app.core.provenance import DATASETS, NOT_CONFIGURED_MESSAGES, NullReason
+from app.core.records import Records
 
 USER_AGENT = "field-shift/0.2 (crop rotation decision support)"
 SECRET_PARAMS = {"key", "api_key", "token"}
@@ -95,9 +96,9 @@ def now_iso() -> str:
 
 @dataclass
 class Allowance:
-    """A cap on real requests to one metered source per month or day. Kept on disk, so a restart does not reset it."""
+    """A cap on real requests to one metered source per month or day. Kept as a record, so a restart does not reset it."""
 
-    folder: Path
+    records: Records
     source: str
     limit: int
     period: str
@@ -106,13 +107,12 @@ class Allowance:
     def take(self) -> bool:
         """Count one request against the allowance. False when it is used up."""
         stamp = datetime.now(UTC).strftime("%Y-%m" if self.period == "month" else "%Y-%m-%d")
-        path = self.folder / f"{self.source}-{stamp}.json"
+        key = f"allowances/{self.source}-{stamp}"
         with self._lock:
-            used = json.loads(path.read_text())["used"] if path.exists() else 0
+            used = (self.records.get(key) or {"used": 0})["used"]
             if used >= self.limit:
                 return False
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text(json.dumps({"used": used + 1, "limit": self.limit}))
+            self.records.put(key, {"used": used + 1, "limit": self.limit})
             return True
 
 

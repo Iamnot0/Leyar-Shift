@@ -1,18 +1,16 @@
-"""File-backed analysis jobs. A job's id is a hash of its request, so the same request is the same job."""
+"""Analysis jobs, kept as records. A job's id is a hash of its request, so the same request is the same job."""
 
 from __future__ import annotations
 
-import json
 import logging
-import os
 import threading
 from concurrent.futures import ThreadPoolExecutor
-from pathlib import Path
 from typing import Any
 
 from pydantic import ValidationError
 
 from app.adapters.base import now_iso
+from app.core.records import Records
 from app.core.provenance import JOB_STAGES
 from app.modeling import analysis
 from app.modeling.engine import AnalysisError, Context
@@ -23,36 +21,29 @@ STAGE_LABELS = dict(JOB_STAGES)
 
 
 class JobStore:
-    def __init__(self, folder: Path, workers: int = 2) -> None:
-        self.folder = folder
+    def __init__(self, records: Records, inline: bool, workers: int = 2) -> None:
+        self.records = records
+        self.inline = inline
         self._pool = ThreadPoolExecutor(max_workers=workers, thread_name_prefix="analysis")
         self._lock = threading.Lock()
         self._running: set[str] = set()
 
-    def _path(self, job_id: str, suffix: str = "") -> Path:
-        return self.folder / f"{job_id}{suffix}.json"
-
-    def _write(self, path: Path, payload: dict[str, Any]) -> None:
-        self.folder.mkdir(parents=True, exist_ok=True)
-        temporary = path.with_suffix(f".{os.getpid()}.{threading.get_ident()}.tmp")
-        temporary.write_text(json.dumps(payload))
-        temporary.replace(path)
-
     def read(self, job_id: str) -> dict[str, Any] | None:
-        path = self._path(job_id)
-        return json.loads(path.read_text()) if path.exists() else None
+        return self.records.get(f"jobs/{job_id}")
 
     def zones(self, job_id: str) -> dict[str, Any] | None:
-        path = self._path(job_id, ".zones")
-        return json.loads(path.read_text()) if path.exists() else None
+        return self.records.get(f"zones/{job_id}")
+
+    def request(self, job_id: str) -> dict[str, Any] | None:
+        return self.records.get(f"requests/{job_id}")
 
     def _update(self, job: dict[str, Any], **changes: Any) -> None:
         job.update(changes, updated_at=now_iso())
-        self._write(self._path(job["analysis_id"]), job)
+        self.records.put(f"jobs/{job['analysis_id']}", job)
 
     def _keep_request(self, job_id: str, request: dict[str, Any]) -> None:
         """A job that ends in an error has no result to carry its request, so the request is kept beside it to explain the failure."""
-        self._write(self._path(job_id, ".request"), request)
+        self.records.put(f"requests/{job_id}", request)
 
     def submit(self, request: dict[str, Any], ctx: Context) -> dict[str, Any]:
         job_id = analysis.analysis_id(request)
@@ -65,9 +56,12 @@ class JobStore:
             created = now_iso()
             job = {"analysis_id": job_id, "status": "queued", "stage": None, "stage_label": None, "created_at": created,
                    "updated_at": created, "error": None, "result": None}
-            self._write(self._path(job_id), job)
+            self.records.put(f"jobs/{job_id}", job)
             self._running.add(job_id)
-        self._pool.submit(self._run, job, request, ctx)
+        if self.inline:
+            self._run(job, request, ctx)
+        else:
+            self._pool.submit(self._run, job, request, ctx)
         return job
 
     def _run(self, job: dict[str, Any], request: dict[str, Any], ctx: Context) -> None:
@@ -78,7 +72,7 @@ class JobStore:
             # Nothing leaves the engine that the contract does not allow.
             models.Analysis.model_validate(result)
             models.ZoneLayers.model_validate(zones)
-            self._write(self._path(job_id, ".zones"), zones)
+            self.records.put(f"zones/{job_id}", zones)
             self._update(job, status="done", stage=None, stage_label=None, result=result)
         except AnalysisError as error:
             self._keep_request(job_id, request)

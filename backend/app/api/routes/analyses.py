@@ -19,7 +19,8 @@ router = APIRouter(prefix="/v1")
 
 @lru_cache
 def get_store() -> JobStore:
-    return JobStore(get_settings().jobs_dir)
+    settings = get_settings()
+    return JobStore(settings.records, settings.inline_jobs)
 
 
 @router.post("/analyses", status_code=202)
