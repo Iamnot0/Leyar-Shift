@@ -13,9 +13,6 @@ from datetime import date
 
 import numpy as np
 import rasterio
-from rasterio.enums import Resampling
-from rasterio.warp import reproject, transform_bounds
-from rasterio.windows import from_bounds
 from shapely.geometry import mapping
 
 from app.adapters.base import Fetcher, FetchError, SourceState
@@ -23,12 +20,9 @@ from app.core import config
 from app.fusion.grid import Grid
 
 STAC_SEARCH = "https://planetarycomputer.microsoft.com/api/stac/v1/search"
-SAS_TOKEN = "https://planetarycomputer.microsoft.com/api/sas/v1/token/"
 CROP_API = "https://planetarycomputer.microsoft.com/api/data/v1/item/bbox"
 # One request per picture, so these are bound by round trips and not by this machine.
 CROP_WORKERS = 32
-GDAL_ENV = {"GDAL_DISABLE_READDIR_ON_OPEN": "EMPTY_DIR", "GDAL_HTTP_MAX_RETRY": "4", "GDAL_HTTP_RETRY_DELAY": "1",
-            "CPL_VSIL_CURL_ALLOWED_EXTENSIONS": ".tif,.tiff", "GDAL_HTTP_TIMEOUT": "60"}
 # Sentinel-2 scene classes that show the ground: vegetation, bare soil, unclassified.
 CLEAR_SCL = (4, 5, 7)
 # Reflectance carries a +1000 offset from processing baseline 04.00 on.
@@ -63,11 +57,6 @@ def _cached_scene(fetcher: Fetcher, source: str, item_id: str, grid: Grid, compu
     return value
 
 
-def _token(fetcher: Fetcher, collection: str) -> str:
-    # Tokens last about an hour; a 30 minute cache keeps them fresh without asking per read.
-    return fetcher.get_json("planetary_computer", SAS_TOKEN + collection, max_age_days=0.02)["token"]
-
-
 def _crop(fetcher: Fetcher, collection: str, item_id: str, assets: tuple[str, ...], grid: Grid, resampling: str) -> np.ndarray:
     """The named bands of one picture, cut and resampled onto the grid by the catalogue's own server, which sits beside the files.
 
@@ -88,6 +77,15 @@ def _crop(fetcher: Fetcher, collection: str, item_id: str, assets: tuple[str, ..
     return values
 
 
+def _crop_onto_grid(fetcher: Fetcher, collection: str, item_id: str, asset: str, grid: Grid, resampling: str, *, dtype: str = "float32") -> np.ndarray:
+    """One band through the crop service, with missing cells as NaN for measurements and 0 for class codes.
+
+    Reading the files directly needs a storage token that the storage refuses from Vercel's network (HTTP 403).
+    """
+    band = _crop(fetcher, collection, item_id, (asset,), grid, resampling)[0]
+    return band if dtype.startswith("float") else np.nan_to_num(band, nan=0).astype(dtype)
+
+
 def _search(fetcher: Fetcher, collection: str, grid: Grid, *, max_age_days: float | None, **extra: object) -> list[dict]:
     body = {"collections": [collection], "intersects": mapping(grid.polygon_lonlat.centroid), "limit": 250, **extra}
     items: list[dict] = []
@@ -103,21 +101,6 @@ def _search(fetcher: Fetcher, collection: str, grid: Grid, *, max_age_days: floa
     return items
 
 
-def _read_onto_grid(href: str, grid: Grid, resampling: Resampling, *, dtype: str = "float32") -> np.ndarray:
-    """Read only the window over the field, then resample that window onto the grid."""
-    with rasterio.Env(**GDAL_ENV), rasterio.open(href) as source:
-        bounds = transform_bounds(grid.crs, source.crs, *grid.bounds_xy, densify_pts=21)
-        pad = 4 * max(abs(source.res[0]), abs(source.res[1]))
-        window = from_bounds(bounds[0] - pad, bounds[1] - pad, bounds[2] + pad, bounds[3] + pad, source.transform)
-        window = window.round_offsets().round_lengths()
-        data = source.read(1, window=window, boundless=True, fill_value=source.nodata if source.nodata is not None else 0)
-        target = np.full(grid.shape, np.nan if dtype.startswith("float") else 0, dtype=dtype)
-        reproject(data, target, src_transform=source.window_transform(window), src_crs=source.crs, src_nodata=source.nodata,
-                  dst_transform=grid.transform, dst_crs=grid.crs, dst_nodata=np.nan if dtype.startswith("float") else 0,
-                  resampling=resampling)
-    return target
-
-
 def elevation(fetcher: Fetcher, grid: Grid) -> tuple[np.ndarray | None, SourceState]:
     try:
         items = _search(fetcher, "nasadem", grid, max_age_days=None)
@@ -126,8 +109,7 @@ def elevation(fetcher: Fetcher, grid: Grid) -> tuple[np.ndarray | None, SourceSt
         item = items[0]
 
         def produce() -> dict[str, np.ndarray]:
-            href = item["assets"]["elevation"]["href"] + "?" + _token(fetcher, "nasadem")
-            return {"elevation": _read_onto_grid(href, grid, Resampling.bilinear)}
+            return {"elevation": _crop_onto_grid(fetcher, "nasadem", item["id"], "elevation", grid, "bilinear")}
 
         data = fetcher.arrays("nasadem", [item["id"], grid.signature()], produce)["elevation"]
     except (FetchError, KeyError, rasterio.errors.RasterioError) as error:
@@ -144,8 +126,7 @@ def soil_map_units(fetcher: Fetcher, grid: Grid) -> np.ndarray | None:
         item = items[0]
 
         def produce() -> dict[str, np.ndarray]:
-            href = item["assets"]["mukey"]["href"] + "?" + _token(fetcher, "gnatsgo-rasters")
-            return {"mukey": _read_onto_grid(href, grid, Resampling.mode, dtype="int32")}
+            return {"mukey": _crop_onto_grid(fetcher, "gnatsgo-rasters", item["id"], "mukey", grid, "mode", dtype="int32")}
 
         return fetcher.arrays("ssurgo", [item["id"], "mukey", grid.signature()], produce)["mukey"]
     except (FetchError, KeyError, rasterio.errors.RasterioError):

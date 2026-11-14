@@ -13,7 +13,6 @@ from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
 import rasterio
-from rasterio.enums import Resampling
 
 from app.adapters import raster
 from app.adapters.base import Fetcher, FetchError, SourceState
@@ -64,15 +63,14 @@ def field_history(fetcher: Fetcher, grid: Grid) -> tuple[dict[int, dict[int, flo
     cells_read: dict[int, int] = {}
     try:
         items = [item for item in raster._search(fetcher, "usda-cdl", grid, max_age_days=None) if item["properties"].get("usda_cdl:type") == "cropland"]
-        token = raster._token(fetcher, "usda-cdl") if items else ""
     except FetchError:
-        items, token = [], ""
+        items = []
 
     def from_archive(item: dict) -> tuple[int, np.ndarray | None]:
         year = int((item["properties"].get("start_datetime") or item["properties"]["datetime"])[:4])
 
         def produce() -> dict[str, np.ndarray]:
-            return {"classes": raster._read_onto_grid(item["assets"]["cropland"]["href"] + "?" + token, grid, Resampling.nearest, dtype="int32")}
+            return {"classes": raster._crop_onto_grid(fetcher, "usda-cdl", item["id"], "cropland", grid, "nearest", dtype="int32")}
 
         try:
             return year, fetcher.arrays("usda_cdl", ["archive", item["id"], grid.signature()], produce)["classes"]
