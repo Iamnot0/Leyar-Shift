@@ -549,7 +549,7 @@ export function SetupScreen(props: SetupScreenProps) {
                     type="text"
                     autoComplete="postal-code"
                     value={postalCode}
-                    placeholder="Auto-filled from city (or type)"
+                    placeholder="Filled in from the city"
                     onChange={(event) => {
                       setPostalCode(event.target.value);
                       setAddressError(null);
@@ -860,6 +860,57 @@ export function SetupScreen(props: SetupScreenProps) {
     </>
   );
 
+  const cropName = (id: string) => (crops.status === 'ready' ? crops.crops.find((crop) => crop.id === id)?.name : null) ?? id;
+  const rotationWords =
+    rotationYears && rotationYears.length > 0
+      ? rotationYears.map((year) => cropName(year.crop_id) + (year.cover_crop_id ? ', then a cover crop' : '')).join('; then ')
+      : covered?.crop_history_available
+        ? 'Read from the cropland map'
+        : 'Not answered yet';
+  // Wide screens show the answers given so far beside the question; narrow ones have the header and stepper for that.
+  const answersSoFar = (
+    <aside className="card setup-answers" aria-labelledby={`${ids}-answers`}>
+      <h2 id={`${ids}-answers`} className="card__title card__title--small">
+        Your answers so far
+      </h2>
+      <dl className="setup-answers__list">
+        <div>
+          <dt>Field</dt>
+          <dd>
+            {field?.name?.trim() || 'Your marked field'}
+            {covered && <span className="secondary"> · {formatHectares(covered.field.area_ha)} ha</span>}
+          </dd>
+        </div>
+        <div>
+          <dt>Water</dt>
+          <dd>{selectedWaterOption?.label ?? 'Not answered yet'}</dd>
+        </div>
+        <div>
+          <dt>Equipment</dt>
+          <dd>{farm.equipment === null ? 'Not limited' : selectedEquipment.length > 0 ? selectedEquipment.map((item) => item.label).join(', ') : 'None chosen yet'}</dd>
+        </div>
+        <div>
+          <dt>What matters most</dt>
+          <dd>
+            {farm.priorities.length > 0 ? (
+              <ol className="setup-answers__ranked">
+                {farm.priorities.map((priority) => (
+                  <li key={priority}>{PRIORITY_WORDS[priority]}</li>
+                ))}
+              </ol>
+            ) : (
+              'Not answered yet'
+            )}
+          </dd>
+        </div>
+        <div>
+          <dt>What you grow</dt>
+          <dd>{rotationWords}</dd>
+        </div>
+      </dl>
+    </aside>
+  );
+
   const questions = (
     <Card className="question-card">
       {step === 1 && (
@@ -1166,8 +1217,9 @@ export function SetupScreen(props: SetupScreenProps) {
       <div className="screen-part" hidden={step !== 0}>
         {fieldStep}
       </div>
-      <div className="screen-part" hidden={step === 0}>
+      <div className="screen-part setup-split" hidden={step === 0}>
         {questions}
+        {answersSoFar}
       </div>
       <Reminder />
     </>

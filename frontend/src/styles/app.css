@@ -2180,6 +2180,62 @@ details.drawer[open] > summary::after {
   justify-self: start;
 }
 
+.setup-answers {
+  display: none;
+}
+
+@media (min-width: 1100px) {
+  .setup-split {
+    display: grid;
+    grid-template-columns: minmax(0, 760px) minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .setup-answers {
+    position: sticky;
+    top: 16px;
+    display: grid;
+    gap: 14px;
+  }
+
+  /* The rotation step with the map's history already uses the full width. */
+  .setup-split:has(.rotation-split--with-years) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .setup-split:has(.rotation-split--with-years) .setup-answers {
+    display: none;
+  }
+}
+
+.setup-answers__list {
+  display: grid;
+  gap: 0;
+  margin: 0;
+}
+
+.setup-answers__list > div {
+  display: grid;
+  gap: 2px;
+  padding-block: 10px;
+  border-block-start: 1px solid var(--border);
+}
+
+.setup-answers__list dt {
+  color: var(--text-2);
+  font-size: var(--size-secondary);
+}
+
+.setup-answers__list dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.setup-answers__ranked {
+  margin: 0;
+  padding-inline-start: 1.25em;
+}
+
 /* The rotation step uses the full width when it has the map's history to show beside the entry. */
 .question-card:has(.rotation-split--with-years) {
   max-width: none;
