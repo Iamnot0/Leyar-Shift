@@ -157,7 +157,7 @@ function HorizonActions({ horizon, onChooseHorizon }: { horizon: Horizon; onChoo
   }
   return (
     <div className="button-row">
-      <a className="button button--amber" href="#/results">
+      <a className="button button--amber" href="/results">
         See the full comparison
       </a>
       <button type="button" className="button button--on-deep" onClick={() => onChooseHorizon('week')}>
@@ -244,7 +244,7 @@ function YearAnswer({ run, onRetry, onChooseHorizon }: { run: RunState; onRetry:
           Processing on the Field…
         </p>
         <div className="button-row">
-          <a className="button button--on-deep" href="#/results">
+          <a className="button button--on-deep" href="/results">
             See the progress
           </a>
           <button type="button" className="button button--on-deep" onClick={() => onChooseHorizon('week')}>

@@ -18,7 +18,7 @@ export function Header({ live, theme, onThemeChange, screen = null, field = null
   const next: ThemeName = theme === 'dark' ? 'light' : 'dark';
   return (
     <header className="header">
-      <a className="brand" href="#/" aria-label="Leyar Shift, home">
+      <a className="brand" href="/" aria-label="Leyar Shift, home">
         <Logo theme={theme} size={36} />
       </a>
       {live !== null && (
@@ -29,10 +29,10 @@ export function Header({ live, theme, onThemeChange, screen = null, field = null
       )}
       {onChangeField && (
         <nav className="header-nav" aria-label="Views">
-          <a className="header-nav__link" href="#/" aria-current={screen === 'home' ? 'page' : undefined}>
+          <a className="header-nav__link" href="/" aria-current={screen === 'home' ? 'page' : undefined}>
             Field briefing
           </a>
-          <a className="header-nav__link" href="#/results" aria-current={screen === 'results' ? 'page' : undefined}>
+          <a className="header-nav__link" href="/results" aria-current={screen === 'results' ? 'page' : undefined}>
             Full comparison
           </a>
         </nav>

@@ -225,7 +225,7 @@ export function Planner({ client, theme, notices, onThemeChange }: PlannerProps)
     return () => window.clearInterval(timer);
   }, [plan, settled, launch]);
 
-  // On initial load with no hash, default to the overview dashboard (home).
+  // The overview dashboard (home) is the default screen.
   const screen = route.screen;
   const setupStep = route.screen === 'setup' ? route.step : 0;
   const shownScreen = useRef(screen);

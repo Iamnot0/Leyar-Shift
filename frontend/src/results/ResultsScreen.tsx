@@ -54,7 +54,7 @@ function Failure({ error, scenarioIsNormal, onRetry, onNormal, onOpenSetup }: { 
 export function EmptyResultsScreen({ onOpenSetup }: { onOpenSetup: () => void }) {
   return (
     <>
-      <a className="back-link" href="#/">
+      <a className="back-link" href="/">
         <BackIcon />
         Today on your field
       </a>
@@ -94,7 +94,7 @@ export function ResultsScreen(props: ResultsScreenProps) {
 
   return (
     <>
-      <a className="back-link" href="#/">
+      <a className="back-link" href="/">
         <BackIcon />
         Today on your field
       </a>

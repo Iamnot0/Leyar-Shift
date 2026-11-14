@@ -1120,7 +1120,7 @@ export function SetupScreen(props: SetupScreenProps) {
     <>
       {canLeave && (
         <div className="leave-row">
-          <a className="back-link" href="#/results">
+          <a className="back-link" href="/results">
             Back to your results
           </a>
           {!removing && (
