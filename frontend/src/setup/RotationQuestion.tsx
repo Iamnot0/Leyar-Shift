@@ -1,7 +1,7 @@
-import { useImperativeHandle, useRef, useState, type Ref } from 'react';
+import { useId, useImperativeHandle, useRef, useState, type Ref } from 'react';
 import { labelOf, useMeta } from '../app/context';
 import type { ApiError } from '../api/client';
-import type { Coverage, Crop, CropHistory, RotationYear } from '../api/types';
+import type { Coverage, Crop, CropHistory, ObservedYear, RotationYear } from '../api/types';
 import { Drawer } from '../components/ui/Drawer';
 import { RotationEntry, type RotationEntryHandle } from '../components/ui/RotationEntry';
 import { QuantityView } from '../components/ui/Values';
@@ -33,6 +33,38 @@ interface RotationQuestionProps {
   ref?: Ref<RotationQuestionHandle>;
 }
 
+interface LandRun {
+  from: number;
+  to: number;
+  name: string;
+  low: number;
+  high: number;
+}
+
+/** Consecutive years with the same land cover, so 18 years of shrubland and pasture read as two lines. */
+function landRuns(years: ObservedYear[]): LandRun[] {
+  const runs: LandRun[] = [];
+  for (const year of [...years].sort((a, b) => a.year - b.year)) {
+    const last = runs.at(-1);
+    if (last && last.name === year.class_name && last.to === year.year - 1) {
+      last.to = year.year;
+      last.low = Math.min(last.low, year.share_of_field);
+      last.high = Math.max(last.high, year.share_of_field);
+    } else {
+      runs.push({ from: year.year, to: year.year, name: year.class_name, low: year.share_of_field, high: year.share_of_field });
+    }
+  }
+  return runs;
+}
+
+const span = (run: LandRun, joiner: string) => (run.from === run.to ? `${run.from}` : `${run.from}${joiner}${run.to}`);
+
+function mapSummary(runs: LandRun[]): string {
+  if (runs.length === 0) return 'It has no readings for this field.';
+  if (runs.length > 3) return `Since ${runs[0].from} it shows ${runs.length} changes of land cover, none of them a rotation this tool compares.`;
+  return `It shows ${runs.map((run) => `${run.name.toLowerCase()} from ${span(run, ' to ')}`).join(', then ')}.`;
+}
+
 /** What is grown on the field now: read from the cropland map where it reaches, entered by the farmer everywhere else. */
 export function RotationQuestion({ coverage, history, crops, initialYears, initialConfirmed, onRetryCrops, onRetryHistory, ref }: RotationQuestionProps) {
   const meta = useMeta();
@@ -42,10 +74,14 @@ export function RotationQuestion({ coverage, history, crops, initialYears, initi
   const [blocked, setBlocked] = useState(false);
   const sectionRef = useRef<HTMLDivElement>(null);
   const entryRef = useRef<RotationEntryHandle>(null);
+  const panelId = useId();
+  // The map was read and shows no rotation: asking straight away beats a dead end and an extra click.
+  const needsEntry = mapped && history.status === 'ready' && !history.history.detected;
+  const entryShown = entering || needsEntry;
 
   useImperativeHandle(ref, () => ({
     resolve: () => {
-      if (!entering) return { years: null, confirmed };
+      if (!entryShown) return { years: null, confirmed };
       if (crops.status !== 'ready') {
         setBlocked(true);
         sectionRef.current?.focus();
@@ -90,25 +126,7 @@ export function RotationQuestion({ coverage, history, crops, initialYears, initi
     }
     if (history.status !== 'ready') return <p role="status">Reading the national cropland map for this field. The first time can take a minute…</p>;
     const found = history.history.detected;
-    if (!found) {
-      const years = history.history.observed_years;
-      return (
-        <>
-          <p className="detected">
-            <strong>The cropland map shows no clear rotation for this field.</strong> {history.history.null_explanation ?? 'Please enter what you grow.'}
-          </p>
-          {years.length > 0 && (
-            <ul className="year-list">
-              {years.map((observed) => (
-                <li key={observed.year}>
-                  <span className="readout">{observed.year}</span> {observed.class_name}, {formatValue(observed.share_of_field, 'fraction')} of the field
-                </li>
-              ))}
-            </ul>
-          )}
-        </>
-      );
-    }
+    if (!found) return null;
     const consistent = found.share_of_years_consistent;
     return (
       <>
@@ -135,7 +153,46 @@ export function RotationQuestion({ coverage, history, crops, initialYears, initi
 
   return (
     <div ref={sectionRef} tabIndex={-1} className="rotation-question">
-      {mapped && !entering && (
+      {needsEntry && history.status === 'ready' && (
+        <div className={`rotation-split${history.history.observed_years.length > 0 ? ' rotation-split--with-years' : ''}`}>
+          <div className="rotation-split__main">
+            <p className="detected">
+              <strong>No crop rotation shows on the cropland map here.</strong> {mapSummary(landRuns(history.history.observed_years))}
+            </p>
+            <p>Tell us what you grow, or plan to grow, one year at a time. We compare it with the rotations that suit this field.</p>
+            {entry()}
+          </div>
+          {history.history.observed_years.length > 0 && (
+            <aside className="year-panel" aria-labelledby={panelId}>
+              <h3 id={panelId} className="year-panel__title">
+                What the cropland map shows
+              </h3>
+              <ol className="year-runs">
+                {landRuns(history.history.observed_years).map((run) => (
+                  <li key={run.from}>
+                    <span className="readout">{span(run, '–')}</span>
+                    <span>{run.name}</span>
+                    <span className="secondary">
+                      {run.low === run.high ? formatValue(run.low, 'fraction') : `${formatValue(run.low, 'fraction')} to ${formatValue(run.high, 'fraction')}`} of the field
+                    </span>
+                  </li>
+                ))}
+              </ol>
+              <Drawer title="Every year" count={history.history.observed_years.length}>
+                <ul className="year-list year-list--columns">
+                  {history.history.observed_years.map((observed) => (
+                    <li key={observed.year}>
+                      <span className="readout">{observed.year}</span> {observed.class_name}, {formatValue(observed.share_of_field, 'fraction')} of the field
+                    </li>
+                  ))}
+                </ul>
+              </Drawer>
+              {history.history.null_explanation && <p className="caption">{history.history.null_explanation}</p>}
+            </aside>
+          )}
+        </div>
+      )}
+      {mapped && !entryShown && (
         <>
           {detected()}
           <div className="button-row">
@@ -150,7 +207,7 @@ export function RotationQuestion({ coverage, history, crops, initialYears, initi
           </div>
         </>
       )}
-      {entering && (
+      {entering && !needsEntry && (
         <>
           <p>
             {mapped
@@ -172,7 +229,7 @@ export function RotationQuestion({ coverage, history, crops, initialYears, initi
           )}
         </>
       )}
-      {blocked && entering && crops.status !== 'ready' && (
+      {blocked && entryShown && crops.status !== 'ready' && (
         <p className="form-error" role="alert">
           Your rotation is needed first, and the crop list for this place has not loaded.
         </p>

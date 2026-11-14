@@ -2180,6 +2180,74 @@ details.drawer[open] > summary::after {
   justify-self: start;
 }
 
+/* The rotation step uses the full width when it has the map's history to show beside the entry. */
+.question-card:has(.rotation-split--with-years) {
+  max-width: none;
+}
+
+.rotation-split {
+  display: grid;
+  gap: 20px 40px;
+  min-width: 0;
+}
+
+.rotation-split__main {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  align-content: start;
+}
+
+@media (min-width: 960px) {
+  .rotation-split--with-years {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+.year-panel {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  padding: 18px 20px;
+  border-radius: var(--radius-panel);
+  background: var(--ground);
+}
+
+.year-panel__title {
+  font-size: var(--size-secondary);
+  font-weight: 600;
+}
+
+.year-runs {
+  display: grid;
+  gap: 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.year-runs > li {
+  display: grid;
+  grid-template-columns: 6.5rem minmax(0, 1fr);
+  column-gap: 12px;
+}
+
+.year-runs > li > .secondary {
+  grid-column: 2;
+  font-size: var(--size-secondary);
+}
+
+.year-list--columns {
+  display: block;
+  columns: 2 12rem;
+  column-gap: 24px;
+}
+
+.year-list--columns > li {
+  break-inside: avoid;
+  margin-block-end: 4px;
+}
+
 .year-list {
   display: grid;
   gap: 4px;
