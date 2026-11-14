@@ -2575,12 +2575,71 @@ details.drawer[open] > summary::after {
   background: color-mix(in srgb, var(--green-tint) 45%, var(--ground));
 }
 
+.crop-pick__top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.crop-pic {
+  --crop-leaf: #2a8558;
+  --crop-leaf-deep: #185a3a;
+  --crop-stem: #236c47;
+  --crop-gold: #e8a92b;
+  --crop-gold-shade: #9e6809;
+  --crop-warm: #c55a27;
+  --crop-earth: #6b4e35;
+  --crop-boll: #f7f8f4;
+  --crop-bloom: #7c56b8;
+  --crop-water: #2c7da0;
+  --crop-stroke: color-mix(in srgb, var(--ink) 26%, transparent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--card);
+}
+
+:root[data-theme='dark'] .crop-pic {
+  --crop-leaf: #56b886;
+  --crop-leaf-deep: #378d62;
+  --crop-stem: #6ac496;
+  --crop-gold: #f4b740;
+  --crop-gold-shade: #c78b1c;
+  --crop-warm: #e07b47;
+  --crop-earth: #9c7858;
+  --crop-boll: #eef2eb;
+  --crop-bloom: #a888e0;
+  --crop-water: #56a8cc;
+}
+
+.crop-pic--tile {
+  width: 44px;
+  height: 44px;
+}
+
+.crop-pic--dialog {
+  width: 56px;
+  height: 56px;
+}
+
+.crop-pic__svg {
+  width: 78%;
+  height: 78%;
+  display: block;
+}
+
 .crop-pick__head {
   display: flex;
+  flex: 1 1 auto;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 6px 8px;
+  min-width: 0;
 }
 
 .crop-pick__title {
@@ -2588,6 +2647,13 @@ details.drawer[open] > summary::after {
   font-size: 1.0625rem;
   font-weight: 600;
   line-height: 1.25;
+}
+
+.crop-pick__pref {
+  color: var(--ink);
+  font-size: var(--size-caption);
+  font-weight: 600;
+  line-height: 1.35;
 }
 
 .crop-pick__traits {
@@ -2647,10 +2713,24 @@ details.drawer[open] > summary::after {
   gap: 16px;
 }
 
+.crop-dialog__identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
 .crop-dialog__titles {
   display: grid;
   gap: 6px;
   min-width: 0;
+}
+
+.crop-dialog__pref {
+  margin: 0;
+  color: var(--text-2);
+  font-size: var(--size-caption);
+  font-weight: 600;
 }
 
 .crop-dialog__kicker {

@@ -6,6 +6,7 @@ import type {
   CropFitCheck,
   Equipment,
   Label,
+  Priority,
   RainfallScenario,
   TemperatureScenario,
   WaterAvailability,
@@ -15,6 +16,7 @@ import { Card, CardState, Pill, type PillTone } from '../components/ui/kit';
 import { HEAT_WORDS, RAIN_WORDS } from '../content/copy';
 import { MONTHS } from '../lib/format';
 import { bestOf, byRank, shortName } from '../results/reading';
+import { CropIllustration } from './CropIllustration';
 import { REAL_RAIN_MM, degrees } from './words';
 
 export type PredictionHorizon = 'week' | 'month' | 'year';
@@ -59,6 +61,41 @@ const FIT_TONES: Record<CropFitCheck['status'], PillTone> = {
 
 const COLD_HARDY_IDS = new Set(['winter_wheat', 'small_grain', 'alfalfa', 'rye', 'triticale', 'oats']);
 const WARM_TENDER_IDS = new Set(['corn', 'soybean', 'sorghum', 'cotton', 'sunflower', 'dry_beans', 'rice']);
+const SOIL_COVER_IDS = new Set(['alfalfa', 'small_grain', 'winter_wheat', 'cover_crop']);
+
+const PRIORITY_MATCH_LABELS: Record<Priority, string> = {
+  conserve_water: 'Use less water',
+  income: 'Higher income',
+  build_soil: 'Build soil health',
+  reduce_erosion: 'Keep soil in place',
+  break_pest_cycles: 'Break pest cycles',
+  lower_weather_risk: 'Steady in bad weather',
+};
+
+function matchCropToPriority(
+  priority: Priority,
+  crop: Crop,
+  inBest: boolean,
+  inTop: boolean,
+  fitChecks: CropFitCheck[],
+): boolean {
+  switch (priority) {
+    case 'conserve_water':
+      return crop.water_demand === 'low' || crop.rooting_depth === 'deep';
+    case 'build_soil':
+      return crop.nitrogen_fixing || crop.category === 'cover' || crop.category === 'forage' || crop.rooting_depth === 'deep';
+    case 'reduce_erosion':
+      return SOIL_COVER_IDS.has(crop.id) || crop.category === 'cover' || crop.category === 'forage' || crop.rooting_depth === 'deep';
+    case 'break_pest_cycles':
+      return crop.nitrogen_fixing || (crop.family !== null && crop.family !== 'Poaceae') || inBest;
+    case 'income':
+      return inBest || (crop.category === 'cash' && (inTop || crop.grown_locally === true));
+    case 'lower_weather_risk': {
+      const hasBadCheck = fitChecks.some((check) => check.status === 'does_not_fit');
+      return !hasBadCheck && (inBest || inTop || crop.water_demand === 'low' || crop.grown_locally === true);
+    }
+  }
+}
 
 interface CropRotationMatch {
   rank: number | null;
@@ -90,6 +127,7 @@ export interface SuggestedCropDetail {
   id: string;
   name: string;
   badge: { label: string; tone: PillTone };
+  preferenceNote: string | null;
   cardTraits: string[];
   whyFit: string[];
   timing: CropTimingMatch | null;
@@ -311,6 +349,9 @@ function pickSuggestedCrops(
   userEquipment: Equipment[] | null,
   equipmentCatalog: Label[],
   scenario: { rainfall: RainfallScenario; temperature: TemperatureScenario },
+  priorities: Priority[] = [],
+  requireForage = false,
+  localMarketOnly = false,
 ): { snapshot: HorizonSnapshot; items: SuggestedCropDetail[] } {
   const snapshot = buildHorizonSnapshot(horizon, briefing, water, scenario);
   const adviceReading = horizon === 'week' ? briefing.sowThisWeek : horizon === 'month' ? briefing.plantThisMonth : null;
@@ -381,7 +422,12 @@ function pickSuggestedCrops(
     }
   }
 
-  const baseCandidates = crops.filter((crop) => crop.category !== 'fallow' && crop.suitable !== false);
+  const allCandidates = crops.filter((crop) => crop.category !== 'fallow' && crop.suitable !== false);
+  const localFiltered =
+    localMarketOnly && allCandidates.some((crop) => crop.grown_locally !== false)
+      ? allCandidates.filter((crop) => crop.grown_locally !== false)
+      : allCandidates;
+  const baseCandidates = localFiltered;
   const poolMap = new Map<string, Crop>();
   for (const crop of baseCandidates) poolMap.set(crop.id, crop);
 
@@ -484,8 +530,31 @@ function pickSuggestedCrops(
     if (userEquipment !== null) {
       priority += missingEquipmentLabels.length === 0 ? 8 : -6;
     }
-    if (crop.category === 'cash' || crop.category === 'forage') priority += 6;
-    if (crop.grown_locally === true) priority += 4;
+    if (requireForage) {
+      if (crop.category === 'forage') priority += 28;
+    } else if (crop.category === 'cash' || crop.category === 'forage') {
+      priority += 6;
+    }
+    if (localMarketOnly && crop.grown_locally === true) priority += 20;
+    else if (crop.grown_locally === true) priority += 4;
+
+    const priorityWeights = [22, 15, 9];
+    let matchedPriority: { rank: number; key: Priority } | null = null;
+    priorities.slice(0, 3).forEach((prio, index) => {
+      if (matchCropToPriority(prio, crop, inBest, inTop, fitChecks)) {
+        priority += priorityWeights[index] ?? 6;
+        if (!matchedPriority) matchedPriority = { rank: index + 1, key: prio };
+      }
+    });
+
+    const preferenceNote =
+      requireForage && crop.category === 'forage'
+        ? 'Fits your livestock forage preference'
+        : matchedPriority !== null
+          ? `Matches #${(matchedPriority as { rank: number; key: Priority }).rank} priority: ${PRIORITY_MATCH_LABELS[(matchedPriority as { rank: number; key: Priority }).key]}`
+          : localMarketOnly && crop.grown_locally === true
+            ? 'Grown in nearby local markets'
+            : null;
 
     const badge = resolveCropBadge(horizon, crop, timing, inBest, inTop, snapshot);
     const cardTraits: string[] = [];
@@ -500,6 +569,8 @@ function pickSuggestedCrops(
       const cleaned = text?.trim();
       if (cleaned && !whyFit.includes(cleaned)) whyFit.push(cleaned);
     };
+
+    if (preferenceNote) addWhy(`${preferenceNote}.`);
 
     if (horizon === 'week' || horizon === 'month') {
       if (timing?.good) addWhy(`${timing.verdict}: ${timing.reason}`);
@@ -538,6 +609,7 @@ function pickSuggestedCrops(
         id: crop.id,
         name: cleanName,
         badge,
+        preferenceNote,
         cardTraits: cardTraits.slice(0, 3),
         whyFit: whyFit.slice(0, 3),
         timing,
@@ -626,13 +698,17 @@ function CropDetailDialog({
       {crop && (
         <div className="crop-dialog__panel">
           <header className="crop-dialog__head">
-            <div className="crop-dialog__titles">
-              <p className="crop-dialog__kicker">{snapshot.titleContext}</p>
-              <div className="crop-dialog__title-row">
-                <h3 id={titleId} className="crop-dialog__title">
-                  {crop.name}
-                </h3>
-                <Pill tone={crop.badge.tone}>{crop.badge.label}</Pill>
+            <div className="crop-dialog__identity">
+              <CropIllustration cropId={crop.id} size="dialog" />
+              <div className="crop-dialog__titles">
+                <p className="crop-dialog__kicker">{snapshot.titleContext}</p>
+                <div className="crop-dialog__title-row">
+                  <h3 id={titleId} className="crop-dialog__title">
+                    {crop.name}
+                  </h3>
+                  <Pill tone={crop.badge.tone}>{crop.badge.label}</Pill>
+                </div>
+                {crop.preferenceNote && <p className="crop-dialog__pref">{crop.preferenceNote}</p>}
               </div>
             </div>
             <button
@@ -761,6 +837,9 @@ interface SuggestedCropsProps {
   briefing: FieldBriefing;
   water: WaterAvailability | null;
   equipment: Equipment[] | null;
+  priorities?: Priority[];
+  requireForage?: boolean;
+  localMarketOnly?: boolean;
   scenario: { rainfall: RainfallScenario; temperature: TemperatureScenario };
   loading: boolean;
 }
@@ -772,6 +851,9 @@ export function SuggestedCropsCard({
   briefing,
   water,
   equipment,
+  priorities = [],
+  requireForage = false,
+  localMarketOnly = false,
   scenario,
   loading,
 }: SuggestedCropsProps) {
@@ -786,6 +868,9 @@ export function SuggestedCropsCard({
     equipment,
     meta.equipment,
     scenario,
+    priorities,
+    requireForage,
+    localMarketOnly,
   );
   const selectedCrop = selectedId ? items.find((item) => item.id === selectedId) ?? null : null;
 
@@ -815,10 +900,14 @@ export function SuggestedCropsCard({
                   className="crop-pick"
                   onClick={() => setSelectedId(crop.id)}
                 >
-                  <span className="crop-pick__head">
-                    <strong className="crop-pick__title">{crop.name}</strong>
-                    <Pill tone={crop.badge.tone}>{crop.badge.label}</Pill>
+                  <span className="crop-pick__top">
+                    <CropIllustration cropId={crop.id} size="tile" />
+                    <span className="crop-pick__head">
+                      <strong className="crop-pick__title">{crop.name}</strong>
+                      <Pill tone={crop.badge.tone}>{crop.badge.label}</Pill>
+                    </span>
                   </span>
+                  {crop.preferenceNote && <span className="crop-pick__pref">{crop.preferenceNote}</span>}
                   <span className="crop-pick__traits">{crop.cardTraits.join(' · ')}</span>
                   <span className="crop-pick__action">Why it fits</span>
                 </button>

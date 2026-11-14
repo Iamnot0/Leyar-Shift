@@ -50,6 +50,11 @@ const NO_CONNECTION: Problem = { type: 'network', title: 'No connection', status
 /** What a proxy in front of the data service answers, without a problem body, when the service itself is down. */
 const GATEWAY_FAILURES = [502, 503, 504];
 
+// Five decimals is about a metre: the same field always asks the same question, so the CDN can answer it again.
+function place(lat: number, lon: number) {
+  return { lat: Number(lat.toFixed(5)), lon: Number(lon.toFixed(5)) };
+}
+
 export function createHttpClient(baseUrl: string): ApiClient {
   async function call<T>(method: 'GET' | 'POST', path: string, options: CallOptions = {}): Promise<T> {
     const query = options.query ? `?${new URLSearchParams(Object.entries(options.query).map(([key, value]) => [key, String(value)]))}` : '';
@@ -80,10 +85,10 @@ export function createHttpClient(baseUrl: string): ApiClient {
     getMeta: () => call('GET', '/v1/meta'),
     checkCoverage: (geometry) => call('POST', '/v1/coverage', { body: { geometry } }),
     getCropHistory: (geometry) => call('POST', '/v1/crop-history', { body: { geometry } }),
-    listCrops: (lat, lon) => call('GET', '/v1/crops', { query: { lat, lon } }),
-    listLayers: (lat, lon) => call('GET', '/v1/layers', { query: { lat, lon } }),
-    getOutlook: (lat, lon) => call('GET', '/v1/outlook', { query: { lat, lon } }),
-    getBriefing: (lat, lon) => call('GET', '/v1/briefing', { query: { lat, lon } }),
+    listCrops: (lat, lon) => call('GET', '/v1/crops', { query: place(lat, lon) }),
+    listLayers: (lat, lon) => call('GET', '/v1/layers', { query: place(lat, lon) }),
+    getOutlook: (lat, lon) => call('GET', '/v1/outlook', { query: place(lat, lon) }),
+    getBriefing: (lat, lon) => call('GET', '/v1/briefing', { query: place(lat, lon) }),
     createAnalysis: (request) => call('POST', '/v1/analyses', { body: request }),
     getAnalysis: (analysisId) => call('GET', `/v1/analyses/${analysisId}`),
     getZones: (analysisId) => call('GET', `/v1/analyses/${analysisId}/zones`),

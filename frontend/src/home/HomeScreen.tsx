@@ -483,6 +483,9 @@ export function HomeScreen({ client, plan, run, onRetry }: HomeScreenProps) {
                 briefing={briefing}
                 water={plan.farm.water}
                 equipment={plan.farm.equipment}
+                priorities={plan.farm.priorities}
+                requireForage={plan.farm.requireForage}
+                localMarketOnly={plan.farm.localMarketOnly}
                 scenario={plan.scenario}
                 loading={waiting}
               />
@@ -501,6 +504,9 @@ export function HomeScreen({ client, plan, run, onRetry }: HomeScreenProps) {
                 briefing={briefing}
                 water={plan.farm.water}
                 equipment={plan.farm.equipment}
+                priorities={plan.farm.priorities}
+                requireForage={plan.farm.requireForage}
+                localMarketOnly={plan.farm.localMarketOnly}
                 scenario={plan.scenario}
                 loading={waiting}
               />
@@ -519,6 +525,9 @@ export function HomeScreen({ client, plan, run, onRetry }: HomeScreenProps) {
                 briefing={briefing}
                 water={plan.farm.water}
                 equipment={plan.farm.equipment}
+                priorities={plan.farm.priorities}
+                requireForage={plan.farm.requireForage}
+                localMarketOnly={plan.farm.localMarketOnly}
                 scenario={plan.scenario}
                 loading={waiting}
               />
