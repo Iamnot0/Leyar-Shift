@@ -46,20 +46,32 @@ interface AnswerCardProps {
   pill: string;
   headline: ReactNode;
   smallHeadline?: boolean;
+  /** Shown beside the headline on wide screens and under it on narrow ones. */
+  media?: ReactNode;
   id?: string;
   className?: string;
   children?: ReactNode;
 }
 
 /** The one loud thing on a screen: the conclusion, on deep green. */
-export function AnswerCard({ pill, headline, smallHeadline = false, id, className = '', children }: AnswerCardProps) {
+export function AnswerCard({ pill, headline, smallHeadline = false, media, id, className = '', children }: AnswerCardProps) {
   const titleId = useId();
+  const title = (
+    <h2 id={titleId} className={`answer-headline ${smallHeadline ? 'answer-headline--small' : ''}`}>
+      {headline}
+    </h2>
+  );
   return (
     <section id={id} className={`card card--answer ${className}`} aria-labelledby={titleId}>
       <Pill tone="amber">{pill}</Pill>
-      <h2 id={titleId} className={`answer-headline ${smallHeadline ? 'answer-headline--small' : ''}`}>
-        {headline}
-      </h2>
+      {media ? (
+        <div className="answer-top">
+          {title}
+          {media}
+        </div>
+      ) : (
+        title
+      )}
       {children}
     </section>
   );

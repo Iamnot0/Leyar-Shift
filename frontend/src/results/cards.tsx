@@ -4,6 +4,7 @@ import type { Analysis, CalendarHazard, CropFit, EvidenceKind, Rotation, ScoreId
 import { Drawer } from '../components/ui/Drawer';
 import { EvidenceTag } from '../components/ui/EvidenceTag';
 import { AnswerCard, Card, Pill } from '../components/ui/kit';
+import { CropPhotos } from './CropPhotos';
 import { ScoreList } from '../components/ui/ScoreList';
 import { RibbonLegend, SeasonRibbon } from '../components/ui/SeasonRibbon';
 import { SourceList } from '../components/ui/SourceList';
@@ -60,7 +61,7 @@ export function BestFitCard({ analysis, comparisonId, onChangePriorities }: Answ
   const rows = headToHead(best, current, analysis.currency);
   const wins = cameOutBest(best);
   return (
-    <AnswerCard className="wide" pill={closeCallPill(analysis, current.id)} headline={shortName(best)}>
+    <AnswerCard className="wide" pill={closeCallPill(analysis, current.id)} headline={shortName(best)} media={<CropPhotos rotation={best} />}>
       <p className="lead">{reasonSentence(best, current)}</p>
       {analysis.close_call && (
         <p className="ranking-note" role="note">

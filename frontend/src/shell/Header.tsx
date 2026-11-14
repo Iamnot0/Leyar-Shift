@@ -58,7 +58,7 @@ export function Header({ live, theme, onThemeChange, screen = null, field = null
         onChangeField && (
           <button
             type="button"
-            className="field-pill"
+            className="field-pill field-pill--setup"
             title="Set up your field"
             aria-current={screen === null ? 'page' : undefined}
             onClick={onChangeField}

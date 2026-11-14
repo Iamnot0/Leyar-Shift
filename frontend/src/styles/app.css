@@ -231,6 +231,11 @@ svg {
   background: var(--track);
 }
 
+/* Without the round change-field badge on the right, the label needs the same air on both sides. */
+.field-pill--setup {
+  padding-inline: 14px 18px;
+}
+
 .field-pill__pin {
   display: inline-grid;
   place-items: center;
@@ -633,6 +638,79 @@ svg {
   font-weight: 700;
   letter-spacing: var(--tracking-display);
   line-height: var(--line-headline);
+}
+
+.answer-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px 32px;
+}
+
+.answer-top > .answer-headline {
+  flex: 1 1 18rem;
+}
+
+.crop-photos {
+  flex: 0 1 26rem;
+  margin: 0;
+}
+
+.crop-photos__list {
+  display: flex;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.crop-photos__item {
+  flex: 0 1 8.5rem;
+  min-width: 0;
+}
+
+.crop-photos__link {
+  display: grid;
+  gap: 6px;
+  color: inherit;
+  text-decoration: none;
+  border-radius: var(--radius-panel);
+}
+
+.crop-photos__link:hover img {
+  opacity: 0.88;
+}
+
+.crop-photos__item img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: var(--radius-panel);
+  background: color-mix(in srgb, var(--on-deep) 12%, transparent);
+}
+
+.crop-photos__name {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.crop-photos__credit {
+  margin-block-start: 10px;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+@media (max-width: 640px) {
+  .crop-photos {
+    flex-basis: 100%;
+  }
+
+  .crop-photos__item {
+    flex: 1 1 0;
+  }
 }
 
 .answer-headline--small {
@@ -2965,7 +3043,12 @@ details.drawer[open] > summary::after {
     order: 1;
     flex: 1 1 100%;
     width: 100%;
-    justify-content: space-between;
+    justify-content: flex-start;
+    border-radius: var(--radius-panel);
+  }
+
+  .header .field-pill--setup {
+    justify-content: center;
   }
 
   .header .field-pill__meta {
@@ -3147,6 +3230,10 @@ details.drawer[open] > summary::after {
   .header .header-nav {
     grid-template-columns: minmax(0, 1fr);
     border-radius: var(--radius-panel);
+  }
+
+  .header .header-nav__link {
+    border-radius: calc(var(--radius-panel) - 4px);
   }
 
   .segmented:not([data-stack='always']) .segmented__options {
