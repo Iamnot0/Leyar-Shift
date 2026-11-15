@@ -1,5 +1,5 @@
 /* The front page: a working farm edge to edge with the pitch on it, then the ways in, how it works, the data behind it, and real fields to try. */
-.page--landing {
+.page.page--landing {
   max-width: none;
   padding-block-start: 0;
   padding-inline: 0;
