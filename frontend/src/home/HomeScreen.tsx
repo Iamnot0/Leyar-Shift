@@ -332,6 +332,7 @@ export function LandingScreen({ hasField, onOpenSetup, onOpenOverview, onOpenExa
     <div className="landing">
       <section className="hero" aria-labelledby="hero-title">
         <video className="hero__video" autoPlay muted loop playsInline preload="metadata" poster="/hero/hero.jpg" aria-hidden="true" tabIndex={-1}>
+          <source src="/hero/hero-av1.mp4" type='video/mp4; codecs="av01.0.05M.10"' media="(min-width: 641px)" />
           <source src="/hero/hero.mp4" type="video/mp4" media="(min-width: 641px)" />
         </video>
         <div className="hero__copy">
