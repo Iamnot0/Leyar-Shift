@@ -379,7 +379,6 @@ export function EmptyHomeScreen({ onOpenSetup, onOpenExample }: { onOpenSetup: (
           <h2 id="what-to-grow" className="card__title">
             What to grow, and when
           </h2>
-          <p className="secondary">Pick how far ahead you want to look.</p>
         </div>
         <ToggleGroup label="How far ahead" options={HORIZONS} value={horizon} onChange={chooseHorizon} />
       </section>
