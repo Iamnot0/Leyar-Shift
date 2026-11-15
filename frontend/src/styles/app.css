@@ -3963,14 +3963,14 @@ details.drawer[open] > summary::after {
 
 .resources {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(22rem, 100%), 1fr));
-  align-items: start;
   gap: var(--space-gap);
 }
 
 .resources__list {
   display: grid;
-  gap: 2px;
+  grid-template-columns: repeat(auto-fill, minmax(min(20rem, 100%), 1fr));
+  column-gap: 28px;
+  row-gap: 2px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -3982,9 +3982,6 @@ details.drawer[open] > summary::after {
   border-block-end: 1px solid var(--border);
 }
 
-.resources__list > li:last-child {
-  border-block-end: 0;
-}
 
 .resources__list a {
   display: inline-flex;
