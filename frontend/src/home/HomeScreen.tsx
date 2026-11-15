@@ -359,9 +359,12 @@ export function LandingScreen({ hasField, onOpenSetup, onOpenOverview, onOpenExa
       </div>
 
       <section className="landing__section" aria-labelledby="how-title">
-        <h2 id="how-title" className="landing__heading">
-          How it works
-        </h2>
+        <header className="landing__head">
+          <h2 id="how-title" className="landing__heading">
+            How it works
+          </h2>
+          <p>From a field on the map to a clear answer, in four steps.</p>
+        </header>
         <ol className="landing__steps">
           {HOW_IT_WORKS.map(([title, body]) => (
             <li key={title}>
@@ -372,8 +375,8 @@ export function LandingScreen({ hasField, onOpenSetup, onOpenOverview, onOpenExa
         </ol>
       </section>
 
-      <section className="landing__section landing__data" aria-labelledby="data-title">
-        <div className="landing__data-text">
+      <section className="landing__section" aria-labelledby="data-title">
+        <header className="landing__head">
           <h2 id="data-title" className="landing__heading">
             Built on NASA Earth data
           </h2>
@@ -381,16 +384,8 @@ export function LandingScreen({ hasField, onOpenSetup, onOpenOverview, onOpenExa
             Leyar Shift reads NASA and partner Earth data for your field, tries every rotation that suits it through 500 weather years, and
             shows the best fit beside what you grow now, in plain words.
           </p>
-          <ul className="landing__sources">
-            {NASA_HIGHLIGHTS.map((name) => (
-              <li key={name}>{name}</li>
-            ))}
-          </ul>
-          <a className="landing__link" href="/resources">
-            See every source
-          </a>
-        </div>
-        <dl className="hero__facts">
+        </header>
+        <dl className="landing__stats">
           <div>
             <dt>25 years</dt>
             <dd>of daily NASA weather for any field on Earth</dd>
@@ -404,13 +399,23 @@ export function LandingScreen({ hasField, onOpenSetup, onOpenOverview, onOpenExa
             <dd>data sources, each one named</dd>
           </div>
         </dl>
+        <ul className="landing__sources">
+          {NASA_HIGHLIGHTS.map((name) => (
+            <li key={name}>{name}</li>
+          ))}
+        </ul>
+        <a className="landing__link" href="/resources">
+          See every source
+        </a>
       </section>
 
       <section className="landing__section" id="samples" aria-labelledby="samples-title">
-        <h2 id="samples-title" className="landing__heading">
-          Try a real field
-        </h2>
-        <p className="secondary">Three US farms from the USDA crop map. Each opens in a few seconds.</p>
+        <header className="landing__head">
+          <h2 id="samples-title" className="landing__heading">
+            Try a real field
+          </h2>
+          <p>Three US farms from the USDA crop map. Each opens in a few seconds.</p>
+        </header>
         <div className="landing__samples">
           {EXAMPLE_FIELDS.map((example) => (
             <button key={example.id} type="button" className="sample-card" onClick={() => onOpenExample(example)}>

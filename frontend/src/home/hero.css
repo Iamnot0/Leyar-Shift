@@ -40,7 +40,9 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, color-mix(in srgb, var(--green-deep) 92%, transparent) 0%, color-mix(in srgb, var(--green-deep) 55%, transparent) 38%, transparent 70%);
+  background:
+    radial-gradient(90% 70% at 50% 60%, transparent 30%, color-mix(in srgb, #000 45%, transparent) 100%),
+    linear-gradient(to top, color-mix(in srgb, var(--green-deep) 90%, transparent) 0%, color-mix(in srgb, var(--green-deep) 45%, transparent) 40%, transparent 72%);
   pointer-events: none;
 }
 
@@ -50,9 +52,11 @@
   box-sizing: border-box;
   display: grid;
   gap: 16px;
+  justify-items: center;
   justify-self: center;
   width: 100%;
   max-width: var(--space-page-max);
+  text-align: center;
   padding-block: clamp(24px, 5vw, 56px) clamp(56px, 7vw, 88px);
   padding-inline: max(var(--space-gutter), calc(env(safe-area-inset-left, 0px) + var(--space-gutter)));
   color: var(--on-deep);
@@ -61,10 +65,10 @@
 .hero__title {
   max-width: 40rem;
   font-family: var(--font-display);
-  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  font-size: clamp(2.75rem, 7vw, 5.25rem);
   font-weight: 700;
-  letter-spacing: var(--tracking-display);
-  line-height: 1;
+  letter-spacing: -0.035em;
+  line-height: 0.98;
 }
 
 .hero__lead {
@@ -98,14 +102,28 @@
 
 .landing__section {
   display: grid;
-  gap: 18px;
+  gap: 24px;
+}
+
+.landing__head {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  max-width: 44rem;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.landing__head > p {
+  color: var(--text-2);
+  font-size: clamp(1rem, 1.4vw, 1.125rem);
 }
 
 .landing__heading {
   font-family: var(--font-display);
-  font-size: clamp(1.625rem, 3vw, 2.25rem);
+  font-size: clamp(1.875rem, 3.6vw, 2.75rem);
   font-weight: 700;
-  letter-spacing: var(--tracking-display);
+  letter-spacing: -0.025em;
   line-height: var(--line-headline);
 }
 
@@ -151,28 +169,45 @@
   color: var(--text-2);
 }
 
-.landing__data {
-  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
-  align-items: center;
-  gap: clamp(24px, 4vw, 56px);
-  padding: clamp(24px, 4vw, 48px);
-  border-radius: var(--radius-card);
-  background: var(--green-deep);
-  color: var(--on-deep);
-}
-
-.landing__data-text {
+.landing__stats {
   display: grid;
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(min(14rem, 100%), 1fr));
+  gap: var(--space-gap);
+  margin: 0;
 }
 
-.landing__data-text > p {
+.landing__stats > div {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 6px;
+  min-height: 180px;
+  padding: 24px;
+  border: 1px solid color-mix(in srgb, var(--green-deep) 60%, var(--border));
+  border-radius: var(--radius-card);
+  background: radial-gradient(120% 90% at 50% 0%, color-mix(in srgb, var(--green) 30%, var(--green-deep)) 0%, var(--green-deep) 70%);
+  color: var(--on-deep);
+  text-align: center;
+}
+
+.landing__stats dt {
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 5vw, 3.5rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.landing__stats dd {
+  margin: 0;
+  max-width: 16rem;
   color: var(--on-deep-2);
 }
 
 .landing__sources {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 8px;
   margin: 0;
   padding: 0;
@@ -180,43 +215,21 @@
 }
 
 .landing__sources > li {
-  padding: 6px 12px;
-  border: 1px solid color-mix(in srgb, var(--on-deep) 28%, transparent);
+  padding: 6px 14px;
+  border: 1px solid var(--border);
   border-radius: 999px;
+  background: var(--card);
+  color: var(--ink);
   font-size: var(--size-secondary);
 }
 
 .landing__link {
-  justify-self: start;
+  justify-self: center;
   display: inline-flex;
   align-items: center;
   min-height: var(--target-min);
-  color: var(--amber);
+  color: var(--green);
   font-weight: 600;
-}
-
-.hero__facts {
-  display: grid;
-  gap: 18px;
-  margin: 0;
-}
-
-.hero__facts > div {
-  display: grid;
-  gap: 2px;
-  padding-block-start: 12px;
-  border-block-start: 1px solid color-mix(in srgb, var(--on-deep) 24%, transparent);
-}
-
-.hero__facts dt {
-  font-family: var(--font-display);
-  font-size: clamp(1.75rem, 3vw, 2.25rem);
-  font-weight: 700;
-}
-
-.hero__facts dd {
-  margin: 0;
-  color: var(--on-deep-2);
 }
 
 .landing__samples {
@@ -257,12 +270,6 @@
 .sample-card__story {
   color: var(--text-2);
   font-size: var(--size-secondary);
-}
-
-@media (max-width: 900px) {
-  .landing__data {
-    grid-template-columns: minmax(0, 1fr);
-  }
 }
 
 @media (max-width: 640px) {
