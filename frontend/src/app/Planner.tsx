@@ -4,6 +4,7 @@ import { useResolvedPlace } from '../api/places';
 import type { Analysis, AnalysisRequest, ContextLayer, Polygon, RotationYear, Scenario } from '../api/types';
 import { SHARPEST, picturesFrom, type PictureChoice } from '../components/map/imagery';
 import { HEAT_WORDS, RAIN_WORDS } from '../content/copy';
+import type { ExampleField } from '../content/examples';
 import { formatHectares } from '../lib/format';
 import { areaHa, centroid } from '../lib/geo';
 import { EmptyHomeScreen, HomeScreen } from '../home/HomeScreen';
@@ -196,6 +197,23 @@ export function Planner({ client, theme, notices, onThemeChange }: PlannerProps)
     navigate({ screen: 'home' });
   };
 
+  // An example is a real field with its answers filled in: it runs the same live comparison as any other.
+  const openExample = (example: ExampleField) => {
+    activeRun.current?.abort();
+    const next: AnalysisPlan = { ...example.plan, scenario: NORMAL };
+    setField(next.field);
+    setFarm(next.farm);
+    setRotationYears(next.years);
+    setRotationConfirmed(next.confirmed);
+    setCoverage({ status: 'checking' });
+    setHistory({ status: 'idle' });
+    fetchCoverage(next.field);
+    setPlan(next);
+    savePlan(next);
+    startAnalysis(next);
+    navigate({ screen: 'results' });
+  };
+
   const checkField = (next: FieldPlan) => {
     setField(next);
     setFarm((current) => (current.ownFigures?.length ? { ...current, ownFigures: [] } : current));
@@ -311,7 +329,7 @@ export function Planner({ client, theme, notices, onThemeChange }: PlannerProps)
           plan ? (
             <HomeScreen key={JSON.stringify(plan.field.geometry)} client={client} plan={plan} run={run} onRetry={() => runWith({})} />
           ) : (
-            <EmptyHomeScreen onOpenSetup={() => navigate({ screen: 'setup', step: 0 })} />
+            <EmptyHomeScreen onOpenSetup={() => navigate({ screen: 'setup', step: 0 })} onOpenExample={openExample} />
           )
         ) : plan ? (
           <ResultsScreen

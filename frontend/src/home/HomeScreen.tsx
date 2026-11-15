@@ -7,6 +7,8 @@ import type { AnalysisPlan, RunState } from '../app/plan';
 import type { Analysis } from '../api/types';
 import { BellIcon } from '../components/ui/Icons';
 import { AnswerCard, Card, CardState, Pill, Reminder, ToggleGroup } from '../components/ui/kit';
+import { CropIllustration } from './CropIllustration';
+import { EXAMPLE_FIELDS, type ExampleField } from '../content/examples';
 import { HEAT_WORDS, RAIN_WORDS } from '../content/copy';
 import { coveredCount } from '../lib/evidence';
 import { formatDay } from '../lib/format';
@@ -315,7 +317,7 @@ interface HomeScreenProps {
 }
 
 /** Shown on the overview dashboard when no field is set up yet or after a field is removed. */
-export function EmptyHomeScreen({ onOpenSetup }: { onOpenSetup: () => void }) {
+export function EmptyHomeScreen({ onOpenSetup, onOpenExample }: { onOpenSetup: () => void; onOpenExample: (example: ExampleField) => void }) {
   const [horizon, setHorizon] = useState<Horizon>(storedHorizon);
   const [openedOn] = useState(() => new Date().toISOString().slice(0, 10));
   const today = longDate(openedOn);
@@ -331,14 +333,35 @@ export function EmptyHomeScreen({ onOpenSetup }: { onOpenSetup: () => void }) {
 
   return (
     <>
-      <header className="page-head">
-        <p className="home-place">No field selected</p>
-        <p className="secondary">{today}</p>
-        <h1 className="page-title">Today on your field</h1>
-        <p className="lead">
-          No field is set up yet. Mark your field on the map to see live weather, recent rain, soil wetness, and rotation advice for your land.
-        </p>
-      </header>
+      <div className="home-top">
+        <header className="page-head">
+          <p className="home-place">No field selected</p>
+          <p className="secondary">{today}</p>
+          <h1 className="page-title">Today on your field</h1>
+          <p className="lead">
+            No field is set up yet. Mark your field on the map to see live weather, recent rain, soil wetness, and rotation advice for your land.
+          </p>
+        </header>
+        <section className="examples" aria-labelledby="examples-title">
+          <h2 id="examples-title" className="card__title card__title--small">
+            Or open a real US field
+          </h2>
+          <p className="caption">Farms from the USDA crop map, compared live.</p>
+          <ul className="examples__list">
+            {EXAMPLE_FIELDS.map((example) => (
+              <li key={example.id}>
+                <button type="button" className="example-pick" onClick={() => onOpenExample(example)}>
+                  <CropIllustration cropId={example.cropId} />
+                  <span className="example-pick__text">
+                    <strong>{example.place}</strong>
+                    <span className="secondary">{example.story}</span>
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      </div>
 
       <div className="reading-grid">
         <Card title="Weather today" smallTitle aside={<Pill tone="neutral">No field</Pill>}>
