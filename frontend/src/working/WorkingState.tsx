@@ -123,7 +123,7 @@ export function WorkingState({ field, stage, coverage, weatherYears, ...picture 
               <Pill tone="neutral">Live</Pill>
               <span className="live-log__elapsed number">{clock(now - started)}</span>
             </p>
-            <ol className="live-log__list" aria-live="polite">
+            <ol className="live-log__list">
               {log.length === 0 && (
                 <li data-state="current">
                   <span className="live-log__time number">{clock(0)}</span>
