@@ -335,8 +335,7 @@ export function EmptyHomeScreen({ onOpenSetup, onOpenExample }: { onOpenSetup: (
     <>
       <div className="home-top">
       <header className="page-head">
-        <p className="home-place">No field selected</p>
-        <p className="secondary">{today}</p>
+        <p className="home-place">{today}\n</p>
         <h1 className="page-title">Today on your field</h1>
         <p className="lead">
           Set up your field to see live weather, recent rain, soil wetness and rotation advice.
