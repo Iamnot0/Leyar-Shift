@@ -3950,6 +3950,70 @@ details.drawer[open] > summary::after {
   text-underline-offset: 3px;
 }
 
+.site-footer {
+  position: relative;
+}
+
+.site-footer__resources > summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.site-footer__resources > summary::-webkit-details-marker {
+  display: none;
+}
+
+/* The source list opens as a panel above the footer, so the footer row keeps its shape. */
+.site-footer__panel {
+  position: absolute;
+  inset-block-end: calc(100% - 8px);
+  inset-inline: 50% auto;
+  z-index: 5;
+  display: grid;
+  gap: 10px;
+  width: min(36rem, calc(100vw - 2 * var(--space-gutter)));
+  max-height: min(60vh, 32rem);
+  padding: 16px 18px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--card);
+  color: var(--ink);
+  text-align: start;
+  transform: translateX(-50%);
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--ink) 18%, transparent);
+}
+
+.site-footer__panel-title {
+  font-weight: 600;
+}
+
+.site-footer__sources {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.site-footer__sources > li {
+  display: grid;
+}
+
+.site-footer__sources a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min);
+  color: var(--green);
+  font-weight: 600;
+}
+
+.site-footer__sources .secondary {
+  margin-block-start: -10px;
+  padding-block-end: 6px;
+  font-size: var(--size-secondary);
+}
+
 .site-footer__event {
   justify-self: end;
   margin: 0;
