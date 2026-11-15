@@ -333,10 +333,14 @@ export function LandingScreen({ hasField, onOpenSetup, onOpenOverview, onOpenExa
 
   return (
       <section className="hero" aria-labelledby="hero-title">
-        <video className="hero__video" autoPlay muted loop playsInline preload="metadata" poster="/hero/hero.jpg" aria-hidden="true" tabIndex={-1}>
-          <source src="/hero/hero.mp4" type="video/mp4" media="(min-width: 641px)" />
-        </video>
+        <div className="hero__media">
+          <video className="hero__video" autoPlay muted loop playsInline preload="metadata" poster="/hero/hero.jpg" aria-hidden="true" tabIndex={-1}>
+            <source src="/hero/hero.mp4" type="video/mp4" media="(min-width: 641px)" />
+          </video>
+          <p className="hero__credit">Centre-pivot irrigation over a green field. Footage: USDA NRCS, public domain.</p>
+        </div>
         <div className="hero__panel">
+          <div className="hero__intro">
           <p className="hero__date">{today}</p>
           <h1 id="hero-title" className="hero__title">
             Know what to grow next on your field
@@ -346,6 +350,8 @@ export function LandingScreen({ hasField, onOpenSetup, onOpenOverview, onOpenExa
             shows the best fit beside what you grow now: water, income and weather risk, in plain words.
           </p>
           <p className="hero__lead">Set up your field to see live weather, recent rain, soil wetness and rotation advice.</p>
+          </div>
+          <div className="hero__side">
           <dl className="hero__facts">
             <div>
               <dt>25 years</dt>
@@ -391,8 +397,8 @@ export function LandingScreen({ hasField, onOpenSetup, onOpenOverview, onOpenExa
               ))}
             </div>
           </div>
+          </div>
         </div>
-        <p className="hero__credit">Centre-pivot irrigation over a green field. Footage: USDA NRCS, public domain.</p>
       </section>
   );
 }

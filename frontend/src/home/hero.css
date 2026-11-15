@@ -1,13 +1,17 @@
-/* The empty home screen opens on a Landsat time-lapse of centre-pivot fields, with the pitch on a solid panel over it. */
+/* The front page: a clear look at a working field first, then what the tool does and the ways in. */
 .hero {
-  position: relative;
   display: grid;
-  min-height: min(78vh, 640px);
-  padding: clamp(16px, 4vw, 40px);
+  gap: var(--space-gap);
+}
+
+.hero__media {
+  position: relative;
   overflow: hidden;
+  aspect-ratio: 16 / 9;
+  max-height: min(72vh, 660px);
+  width: 100%;
   border-radius: var(--radius-card);
   background: var(--green-deep) url('/hero/hero.jpg') center / cover no-repeat;
-  align-items: center;
 }
 
 .hero__video {
@@ -18,15 +22,33 @@
   object-fit: cover;
 }
 
+.hero__credit {
+  position: absolute;
+  inset-inline-end: 12px;
+  inset-block-end: 10px;
+  max-width: calc(100% - 24px);
+  padding: 4px 10px;
+  border-radius: var(--radius-control);
+  background: var(--green-deep);
+  color: var(--on-deep-2);
+  font-size: var(--size-min);
+}
+
 .hero__panel {
-  position: relative;
   display: grid;
-  gap: 14px;
-  max-width: 38rem;
-  padding: clamp(20px, 3vw, 32px);
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: clamp(20px, 4vw, 48px);
+  padding: clamp(20px, 3.5vw, 40px);
   border-radius: var(--radius-card);
   background: var(--green-deep);
   color: var(--on-deep);
+}
+
+.hero__intro,
+.hero__side {
+  display: grid;
+  align-content: start;
+  gap: 14px;
 }
 
 .hero__date {
@@ -36,7 +58,7 @@
 
 .hero__title {
   font-family: var(--font-display);
-  font-size: clamp(2rem, 4.6vw, 3.25rem);
+  font-size: clamp(2rem, 4.2vw, 3.25rem);
   font-weight: 700;
   letter-spacing: var(--tracking-display);
   line-height: var(--line-headline);
@@ -50,11 +72,12 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
-  margin: 4px 0 0;
+  margin: 0;
 }
 
 .hero__facts > div {
   display: grid;
+  align-content: start;
   gap: 2px;
   padding-block-start: 10px;
   border-block-start: 1px solid color-mix(in srgb, var(--on-deep) 24%, transparent);
@@ -86,26 +109,27 @@
   color: var(--ink);
 }
 
-.hero__credit {
-  position: absolute;
-  inset-inline-end: 12px;
-  inset-block-end: 10px;
-  max-width: calc(100% - 24px);
-  padding: 4px 10px;
-  border-radius: var(--radius-control);
-  background: var(--green-deep);
-  color: var(--on-deep-2);
-  font-size: var(--size-min);
+@media (max-width: 900px) {
+  .hero__panel {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 @media (max-width: 640px) {
-  .hero {
-    min-height: 0;
-    padding: 12px 12px 48px;
-  }
-
   .hero__video {
     display: none;
+  }
+
+  .hero__credit {
+    position: static;
+    display: block;
+    margin-block-start: auto;
+    border-radius: 0;
+  }
+
+  .hero__media {
+    display: flex;
+    flex-direction: column;
   }
 
   .hero__facts {
