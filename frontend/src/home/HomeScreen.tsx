@@ -326,42 +326,19 @@ type LandingProps = {
   onOpenExample: (example: ExampleField) => void;
 };
 
-/** The front page: a Landsat time-lapse of centre-pivot fields, what the tool does, and the ways in. */
+/** The front page: a working farm, what the tool does, how it works, the NASA data behind it, and real fields to try. */
 export function LandingScreen({ hasField, onOpenSetup, onOpenOverview, onOpenExample }: LandingProps) {
   return (
+    <div className="landing">
       <section className="hero" aria-labelledby="hero-title">
-        <div className="hero__media">
-          <video className="hero__video" autoPlay muted loop playsInline preload="metadata" poster="/hero/hero.jpg" aria-hidden="true" tabIndex={-1}>
-            <source src="/hero/hero.mp4" type="video/mp4" media="(min-width: 641px)" />
-          </video>
-          <p className="hero__credit">A combine harvesting wheat. Footage: USDA, public domain.</p>
-        </div>
-        <div className="hero__panel">
-          <div className="hero__intro">
+        <video className="hero__video" autoPlay muted loop playsInline preload="metadata" poster="/hero/hero.jpg" aria-hidden="true" tabIndex={-1}>
+          <source src="/hero/hero.mp4" type="video/mp4" media="(min-width: 641px)" />
+        </video>
+        <div className="hero__copy">
           <h1 id="hero-title" className="hero__title">
             Plan your next crop
           </h1>
-          <p className="hero__lead">
-            Leyar Shift reads NASA and partner Earth data for your field, tries every rotation that suits it through 500 weather years, and
-            shows the best fit beside what you grow now: water, income and weather risk, in plain words.
-          </p>
-          <p className="hero__lead">Set up your field to see live weather, recent rain, soil wetness and rotation advice.</p>
-          </div>
-          <div className="hero__side">
-          <dl className="hero__facts">
-            <div>
-              <dt>25 years</dt>
-              <dd>of daily NASA weather for any field on Earth</dd>
-            </div>
-            <div>
-              <dt>500</dt>
-              <dd>weather years tried for every rotation</dd>
-            </div>
-            <div>
-              <dt>{DATA_SOURCES.length}</dt>
-              <dd>data sources, each one named</dd>
-            </div>
-          </dl>
+          <p className="hero__lead">See which crop rotation fits your field best, for water, income and weather risk, from NASA Earth data.</p>
           <div className="hero__actions">
             {hasField ? (
               <>
@@ -373,31 +350,99 @@ export function LandingScreen({ hasField, onOpenSetup, onOpenOverview, onOpenExa
                 </button>
               </>
             ) : (
-              <button type="button" className="button button--amber" onClick={onOpenSetup}>
-                Set up your field
-              </button>
+              <>
+                <button type="button" className="button button--amber" onClick={onOpenSetup}>
+                  Set up your field
+                </button>
+                <a className="button button--on-deep" href="#samples">
+                  Try a sample field
+                </a>
+              </>
             )}
           </div>
-          {/* Real US farms from the USDA crop map, compared live like any other field. */}
-          <div className="samples samples--on-deep" role="group" aria-labelledby="samples-label">
-            <span id="samples-label" className="samples__label">
-              Sample
-            </span>
-            <div className="samples__row">
-              {EXAMPLE_FIELDS.map((example) => (
-                <button key={example.id} type="button" className="field-pill sample-pill" title={example.story} onClick={() => onOpenExample(example)}>
-                  <CropIllustration cropId={example.cropId} size="chip" />
-                  <span className="field-pill__name">{example.short}</span>
-                  <span className="visually-hidden">: {example.place}, {example.story}</span>
-                </button>
-              ))}
-            </div>
+        </div>
+        <p className="hero__credit">{HERO_CREDIT}</p>
+      </section>
+
+      <section className="landing__section" aria-labelledby="how-title">
+        <h2 id="how-title" className="landing__heading">
+          How it works
+        </h2>
+        <ol className="landing__steps">
+          {HOW_IT_WORKS.map(([title, body]) => (
+            <li key={title}>
+              <h3>{title}</h3>
+              <p>{body}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section className="landing__section landing__data" aria-labelledby="data-title">
+        <div className="landing__data-text">
+          <h2 id="data-title" className="landing__heading">
+            Built on NASA Earth data
+          </h2>
+          <p>
+            Leyar Shift reads NASA and partner Earth data for your field, tries every rotation that suits it through 500 weather years, and
+            shows the best fit beside what you grow now, in plain words.
+          </p>
+          <ul className="landing__sources">
+            {NASA_HIGHLIGHTS.map((name) => (
+              <li key={name}>{name}</li>
+            ))}
+          </ul>
+          <a className="landing__link" href="/resources">
+            See every source
+          </a>
+        </div>
+        <dl className="hero__facts">
+          <div>
+            <dt>25 years</dt>
+            <dd>of daily NASA weather for any field on Earth</dd>
           </div>
+          <div>
+            <dt>500</dt>
+            <dd>weather years tried for every rotation</dd>
           </div>
+          <div>
+            <dt>{DATA_SOURCES.length}</dt>
+            <dd>data sources, each one named</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section className="landing__section" id="samples" aria-labelledby="samples-title">
+        <h2 id="samples-title" className="landing__heading">
+          Try a real field
+        </h2>
+        <p className="secondary">Three US farms from the USDA crop map. Each opens in a few seconds.</p>
+        <div className="landing__samples">
+          {EXAMPLE_FIELDS.map((example) => (
+            <button key={example.id} type="button" className="sample-card" onClick={() => onOpenExample(example)}>
+              <CropIllustration cropId={example.cropId} size="chip" />
+              <span className="sample-card__text">
+                <span className="sample-card__place">{example.place}</span>
+                <span className="sample-card__story">{example.story}</span>
+              </span>
+            </button>
+          ))}
         </div>
       </section>
+    </div>
   );
 }
+
+const HERO_CREDIT = 'A combine harvesting wheat. Footage: USDA, public domain.';
+
+const HOW_IT_WORKS: [string, string][] = [
+  ['Mark your field', 'Draw it on a satellite map, or type its size and place a square.'],
+  ['Tell us how you farm', 'How it gets water, what equipment you have, and what matters most to you.'],
+  ['Confirm what you grow', 'In the US it is read from the USDA crop map. Anywhere else, you pick it.'],
+  ['Compare rotations', 'The best fit beside what you grow now: water, income and weather risk.'],
+];
+
+const NASA_HIGHLIGHTS = ['NASA POWER weather', 'GPM IMERG rainfall', 'GRACE-FO groundwater', 'GLDAS and NLDAS soil water', 'MODIS greenness', 'NASADEM elevation', 'Landsat and Sentinel-2'];
 
 export function EmptyHomeScreen({ onOpenSetup, onOpenExample }: { onOpenSetup: () => void; onOpenExample: (example: ExampleField) => void }) {
   const [horizon, setHorizon] = useState<Horizon>(storedHorizon);
