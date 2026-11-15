@@ -339,7 +339,7 @@ export function EmptyHomeScreen({ onOpenSetup, onOpenExample }: { onOpenSetup: (
         <p className="secondary">{today}</p>
         <h1 className="page-title">Today on your field</h1>
         <p className="lead">
-          No field is set up yet. Mark your field on the map to see live weather, recent rain, soil wetness, and rotation advice for your land.
+          Set up your field to see live weather, recent rain, soil wetness and rotation advice.
         </p>
       </header>
       {/* Real US farms from the USDA crop map, compared live like any other field. */}
