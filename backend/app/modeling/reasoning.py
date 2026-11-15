@@ -100,8 +100,9 @@ def _field(analysis: dict) -> dict:
             tier = f" ({ACCESS[dataset['access_tier']]})" if dataset["access_tier"] else ""
             text, group = f"{dataset['role']}{tier}", "Used"
         else:
-            label, description = NULLS.get(dataset["null_reason"], ("Not used", ""))
-            text, group = f"{label}. {dataset['message'] or description}", "Not used"
+            # The reason in full; the short status label belongs on the sources card, not in a sentence.
+            _, description = NULLS.get(dataset["null_reason"], ("Not used", ""))
+            text, group = dataset["message"] or description, "Not used"
         facts.append(_fact(dataset["name"], text, f"datasets[id={dataset['id']}].status", None, [dataset["id"]], group))
     return _step("field", "Read your field and the data sources",
                  "The boundary is laid on a grid of squares, and every source is asked whether it covers this place. "

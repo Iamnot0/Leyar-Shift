@@ -357,7 +357,7 @@ class Builder:
                 else:
                     physical = self.modeled(gap, units[score_id], self.weather + (self.soil if score_id == "water_balance" else []) + self.calendars,
                                             digits=0 if score_id != "erosion" else 1)
-            tally = f"better in {wins} of {self.draws.n} runs" + (f", level in {level}" if level else "")
+            tally = f"better in {wins} of {self.draws.n} weather years" + (f", level in {level}" if level else "")
             texts = {"better": f"Better on {words[score_id]}: {tally}.",
                      "worse": f"Worse on {words[score_id]}: {tally}.",
                      "uncertain": f"Too close to call on {words[score_id]}: {tally}.",

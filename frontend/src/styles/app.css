@@ -374,6 +374,23 @@ svg {
   padding-block: 8px;
 }
 
+.home-top {
+  display: grid;
+  gap: 16px 40px;
+  align-items: center;
+}
+
+/* Beside the heading on wide screens, the samples keep to one row. */
+@media (min-width: 960px) {
+  .home-top {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .home-top .samples__row {
+    flex-wrap: nowrap;
+  }
+}
+
 .samples {
   display: flex;
   flex-wrap: wrap;
@@ -638,6 +655,173 @@ svg {
 
 .card > * {
   min-width: 0;
+}
+
+/* Processing: the steps behind a result as a short trace, closed until asked for. */
+.processing {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--card);
+}
+
+.processing__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  min-height: var(--target-min);
+  padding: 12px 20px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.processing__head::-webkit-details-marker {
+  display: none;
+}
+
+.processing__head::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  margin-inline-start: auto;
+  border-block-end: 2px solid currentColor;
+  border-inline-end: 2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform var(--motion-duration) var(--motion-easing);
+}
+
+.processing[open] > .processing__head::after {
+  transform: rotate(-135deg);
+}
+
+.processing__title {
+  font-weight: 700;
+}
+
+.processing__meta {
+  color: var(--text-2);
+  font-size: var(--size-secondary);
+}
+
+.processing__body {
+  display: grid;
+  gap: 16px;
+  padding: 4px 20px 20px;
+  border-block-start: 1px solid var(--border);
+}
+
+.processing__thinking {
+  padding-block-start: 12px;
+  color: var(--text-2);
+}
+
+.trace {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 12px 0 0;
+  list-style: none;
+}
+
+.trace__step {
+  position: relative;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 12px;
+  padding-block-end: 16px;
+  animation: trace-in 320ms var(--motion-easing) both;
+  animation-delay: calc(var(--step) * 110ms);
+}
+
+/* The thread that joins one step to the next. */
+.trace__step::before {
+  content: '';
+  position: absolute;
+  inset-block: 26px 0;
+  inset-inline-start: 11px;
+  width: 2px;
+  background: var(--border);
+}
+
+.trace__step:last-child::before {
+  display: none;
+}
+
+.trace__mark {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--green-tint);
+  color: var(--on-green-tint);
+}
+
+.trace__body {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.trace__title {
+  font-weight: 600;
+}
+
+.trace__method {
+  color: var(--text-2);
+  font-size: var(--size-secondary);
+}
+
+.trace__facts {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  font-size: var(--size-secondary);
+  list-style: none;
+}
+
+.trace__label {
+  color: var(--text-2);
+}
+
+.trace__more > summary {
+  width: fit-content;
+  min-height: var(--target-min);
+  padding-block: 12px;
+  color: var(--green);
+  font-size: var(--size-secondary);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.processing__summary {
+  display: grid;
+  gap: 6px;
+  padding: 16px 18px;
+  border-radius: var(--radius-panel);
+  background: var(--ground);
+  animation: trace-in 320ms var(--motion-easing) both;
+  animation-delay: calc(var(--step) * 110ms);
+}
+
+@keyframes trace-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trace__step,
+  .processing__summary {
+    animation: none;
+  }
 }
 
 .card__aside-row {
@@ -2163,6 +2347,14 @@ details.drawer[open] > summary::after {
   gap: 0 32px;
   padding: 0;
   list-style: none;
+}
+
+/* A source's name links to its dataset page, with a full-size tap area that leaves the text where it was. */
+.source-list a {
+  display: inline-block;
+  min-height: var(--target-min);
+  margin-block: -12px;
+  padding-block: 12px;
 }
 
 .source-list li {

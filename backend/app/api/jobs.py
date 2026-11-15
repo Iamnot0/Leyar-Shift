@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import threading
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
@@ -45,7 +46,8 @@ class JobStore:
         """A job that ends in an error has no result to carry its request, so the request is kept beside it to explain the failure."""
         self.records.put(f"requests/{job_id}", request)
 
-    def submit(self, request: dict[str, Any], ctx: Context) -> dict[str, Any]:
+    def submit(self, request: dict[str, Any], ctx: Context, *, after_reply: Callable[[Callable[[], None]], None] | None = None) -> dict[str, Any]:
+        """Starts or finds the job. With `after_reply`, the work runs once the reply has gone, so each stage can be read while it runs."""
         job_id = analysis.analysis_id(request)
         with self._lock:
             existing = self.read(job_id)
@@ -58,7 +60,9 @@ class JobStore:
                    "updated_at": created, "error": None, "result": None}
             self.records.put(f"jobs/{job_id}", job)
             self._running.add(job_id)
-        if self.inline:
+        if after_reply is not None:
+            after_reply(lambda: self._run(job, request, ctx))
+        elif self.inline:
             self._run(job, request, ctx)
         else:
             self._pool.submit(self._run, job, request, ctx)

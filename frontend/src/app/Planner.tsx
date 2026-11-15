@@ -333,6 +333,7 @@ export function Planner({ client, theme, notices, onThemeChange }: PlannerProps)
           )
         ) : plan ? (
           <ResultsScreen
+            client={client}
             field={plan.field}
             run={run}
             coverage={coverage}

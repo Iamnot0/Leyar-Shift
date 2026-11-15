@@ -3,6 +3,8 @@ import type { AnalysisPlan } from '../app/plan';
 export interface ExampleField {
   id: string;
   place: string;
+  /** The place as the sample pill shows it. */
+  short: string;
   story: string;
   cropId: string;
   plan: Omit<AnalysisPlan, 'scenario'>;
@@ -18,6 +20,7 @@ export const EXAMPLE_FIELDS: ExampleField[] = [
   {
     id: 'kansas',
     place: 'Garden City, Kansas',
+    short: 'Garden City, KS',
     story: 'Corn pivot over the Ogallala aquifer · limited water',
     cropId: 'corn',
     plan: {
@@ -30,6 +33,7 @@ export const EXAMPLE_FIELDS: ExampleField[] = [
   {
     id: 'nebraska',
     place: 'York, Nebraska',
+    short: 'York, NE',
     story: 'Corn nearly every year · reliable irrigation',
     cropId: 'corn',
     plan: {
@@ -42,6 +46,7 @@ export const EXAMPLE_FIELDS: ExampleField[] = [
   {
     id: 'texas',
     place: 'Lubbock, Texas',
+    short: 'Lubbock, TX',
     story: 'Cotton every year · limited water',
     cropId: 'cotton',
     plan: {

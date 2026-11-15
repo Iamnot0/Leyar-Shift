@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+from collections.abc import Callable
 from functools import lru_cache
 
 from fastapi import APIRouter, Response
@@ -34,15 +36,31 @@ def field_longitude(geometry: dict) -> float | None:
 
 
 @router.post("/analyses", status_code=202)
-def create_analysis(body: models.AnalysisRequest, response: Response):
+async def create_analysis(body: models.AnalysisRequest, response: Response):
     request = body.model_dump(mode="json")
     ctx = get_context(field_longitude(request["field"]["geometry"]))
     try:
-        analysis.check_request(request, ctx)
+        await asyncio.to_thread(analysis.check_request, request, ctx)
     except AnalysisError as error:
         return problem_from(error)
-    job = get_store().submit(request, ctx)
+    job = await asyncio.to_thread(get_store().submit, request, ctx, after_reply=_after_reply())
     return JSONResponse(job, status_code=202, headers={"Location": f"/v1/analyses/{job['analysis_id']}"})
+
+
+def _after_reply() -> Callable[[Callable[[], None]], None] | None:
+    """On Vercel, the platform keeps the function alive for work handed to it after the reply. Elsewhere there is no such hand-off."""
+    if not get_settings().inline_jobs:
+        return None
+    try:
+        from vercel.cache.context import get_context as platform
+    except ImportError:
+        return None
+    keep_alive = platform().wait_until
+    if keep_alive is None:
+        return None
+    loop = asyncio.get_running_loop()
+    # The hand-off belongs to the request's own event loop, so a worker thread schedules it there.
+    return lambda work: loop.call_soon_threadsafe(keep_alive, asyncio.to_thread(work))
 
 
 def finished(job: dict) -> bool:

@@ -18,7 +18,15 @@ export function SourceList({ datasets }: { datasets: Dataset[] }) {
         return (
           <li key={dataset.id}>
             <p>
-              <strong>{what.replace(/\.$/, '')}:</strong> {dataset.name}.{rest.length > 0 && ` ${rest.join('. ')}`}
+              <strong>{what.replace(/\.$/, '')}:</strong>{' '}
+              {dataset.source_url ? (
+                <a href={dataset.source_url} target="_blank" rel="noreferrer">
+                  {dataset.name}
+                </a>
+              ) : (
+                dataset.name
+              )}
+              .{rest.length > 0 && ` ${rest.join('. ')}`}
             </p>
             <Pill tone={pill.tone}>{pill.words}</Pill>
           </li>

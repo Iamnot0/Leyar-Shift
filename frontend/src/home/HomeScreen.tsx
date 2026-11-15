@@ -333,6 +333,7 @@ export function EmptyHomeScreen({ onOpenSetup, onOpenExample }: { onOpenSetup: (
 
   return (
     <>
+      <div className="home-top">
       <header className="page-head">
         <p className="home-place">No field selected</p>
         <p className="secondary">{today}</p>
@@ -350,11 +351,12 @@ export function EmptyHomeScreen({ onOpenSetup, onOpenExample }: { onOpenSetup: (
           {EXAMPLE_FIELDS.map((example) => (
             <button key={example.id} type="button" className="field-pill sample-pill" title={example.story} onClick={() => onOpenExample(example)}>
               <CropIllustration cropId={example.cropId} size="chip" />
-              <span className="field-pill__name">{example.place}</span>
-              <span className="visually-hidden">, {example.story}</span>
+              <span className="field-pill__name">{example.short}</span>
+              <span className="visually-hidden">: {example.place}, {example.story}</span>
             </button>
           ))}
         </div>
+      </div>
       </div>
 
       <div className="reading-grid">
