@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from datetime import UTC, datetime
 import threading
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
@@ -21,6 +22,21 @@ log = logging.getLogger("fieldshift.jobs")
 STAGE_LABELS = dict(JOB_STAGES)
 
 
+# Longer than any run the host allows. A job silent for this long was stopped by the host and will never finish.
+STALE_AFTER_S = 330
+
+
+def _stopped(job: dict[str, Any]) -> dict[str, Any]:
+    if job["status"] not in ("queued", "running"):
+        return job
+    quiet = (datetime.now(UTC) - datetime.fromisoformat(job["updated_at"].replace("Z", "+00:00"))).total_seconds()
+    if quiet < STALE_AFTER_S:
+        return job
+    return {**job, "status": "error", "stage": None, "stage_label": None,
+            "error": {"type": "fetch_failed", "title": "The analysis stopped before it finished", "status": 503,
+                      "detail": "The server stopped this run before it finished, usually while a data source was slow. Try again; what was already read is kept."}}
+
+
 class JobStore:
     def __init__(self, records: Records, inline: bool, workers: int = 2) -> None:
         self.records = records
@@ -30,7 +46,8 @@ class JobStore:
         self._running: set[str] = set()
 
     def read(self, job_id: str) -> dict[str, Any] | None:
-        return self.records.get(f"jobs/{job_id}")
+        job = self.records.get(f"jobs/{job_id}")
+        return _stopped(job) if job is not None else None
 
     def zones(self, job_id: str) -> dict[str, Any] | None:
         return self.records.get(f"zones/{job_id}")
