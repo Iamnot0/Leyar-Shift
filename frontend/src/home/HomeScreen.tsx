@@ -361,18 +361,15 @@ export function EmptyHomeScreen({ onOpenSetup, onOpenExample }: { onOpenSetup: (
 
       <div className="reading-grid">
         <Card title="Weather today" smallTitle aside={<Pill tone="neutral">No field</Pill>}>
-          <CardState kind="empty" title="No field selected yet" action={{ label: 'Set up your field', run: onOpenSetup }}>
-            Mark your field location to load the local forecast and field-work conditions.
+          <CardState kind="empty" title="No weather measure yet." action={{ label: 'Set up your field', run: onOpenSetup }}>
           </CardState>
         </Card>
         <Card title="Rain" smallTitle aside={<Pill tone="neutral">No field</Pill>}>
           <CardState kind="empty" title="No rain readings yet">
-            Recent rainfall totals from satellite and ground stations will appear here once your field is set.
           </CardState>
         </Card>
         <Card title="Soil moisture" smallTitle aside={<Pill tone="neutral">No field</Pill>}>
           <CardState kind="empty" title="No soil readings yet">
-            Surface and root-zone soil wetness for your land will appear here once your field is set.
           </CardState>
         </Card>
       </div>
