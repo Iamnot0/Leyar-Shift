@@ -328,22 +328,18 @@ type LandingProps = {
 
 /** The front page: a Landsat time-lapse of centre-pivot fields, what the tool does, and the ways in. */
 export function LandingScreen({ hasField, onOpenSetup, onOpenOverview, onOpenExample }: LandingProps) {
-  const [openedOn] = useState(() => new Date().toISOString().slice(0, 10));
-  const today = longDate(openedOn);
-
   return (
       <section className="hero" aria-labelledby="hero-title">
         <div className="hero__media">
           <video className="hero__video" autoPlay muted loop playsInline preload="metadata" poster="/hero/hero.jpg" aria-hidden="true" tabIndex={-1}>
             <source src="/hero/hero.mp4" type="video/mp4" media="(min-width: 641px)" />
           </video>
-          <p className="hero__credit">Centre-pivot irrigation over a green field. Footage: USDA NRCS, public domain.</p>
+          <p className="hero__credit">A combine harvesting wheat. Footage: USDA, public domain.</p>
         </div>
         <div className="hero__panel">
           <div className="hero__intro">
-          <p className="hero__date">{today}</p>
           <h1 id="hero-title" className="hero__title">
-            Know what to grow next on your field
+            Plan your next crop
           </h1>
           <p className="hero__lead">
             Leyar Shift reads NASA and partner Earth data for your field, tries every rotation that suits it through 500 weather years, and
