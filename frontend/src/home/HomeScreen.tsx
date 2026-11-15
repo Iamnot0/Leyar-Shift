@@ -6,7 +6,7 @@ import { useAnalysisScope } from '../app/context';
 import type { AnalysisPlan, RunState } from '../app/plan';
 import type { Analysis } from '../api/types';
 import { BellIcon } from '../components/ui/Icons';
-import { AnswerCard, Card, CardState, Pill, Reminder, ToggleGroup } from '../components/ui/kit';
+import { AnswerCard, Card, CardState, Reminder, ToggleGroup } from '../components/ui/kit';
 import { CropIllustration } from './CropIllustration';
 import { EXAMPLE_FIELDS, type ExampleField } from '../content/examples';
 import { HEAT_WORDS, RAIN_WORDS } from '../content/copy';
@@ -335,7 +335,7 @@ export function EmptyHomeScreen({ onOpenSetup, onOpenExample }: { onOpenSetup: (
     <>
       <div className="home-top">
       <header className="page-head">
-        <p className="home-place">{today}\n</p>
+        <p className="home-place">{today}</p>
         <h1 className="page-title">Today on your field</h1>
         <p className="lead">
           Set up your field to see live weather, recent rain, soil wetness and rotation advice.
