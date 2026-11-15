@@ -125,18 +125,13 @@ export function ResultsScreen(props: ResultsScreenProps) {
             <Segmented legend="Rain" inline options={RAIN_OPTIONS} value={scenario.rainfall} onChange={(rainfall) => onScenarioChange({ ...scenario, rainfall })} />
             <Segmented legend="Heat" inline options={HEAT_OPTIONS} value={scenario.temperature} onChange={(temperature) => onScenarioChange({ ...scenario, temperature })} />
           </section>
-          {/* Two columns that stack on their own, so a short card on one side leaves no gap beside a long one. */}
           <div className="row">
-            <div className="wide home-stack">
-              <SwitchCard key={run.analysis.analysis_id} analysis={run.analysis} id={COMPARISON_ID} />
-              <ScoresCard analysis={run.analysis} rotationConfirmed={rotationConfirmed} onConfirmRotation={onConfirmRotation} onChangeRotation={() => onOpenSetup(3)} />
-            </div>
-            <div className="narrow home-stack">
-              <MonthsCard analysis={run.analysis} />
-              <SourcesCard analysis={run.analysis} detailId={SOURCES_ID} detailOpen={detailOpen} onToggleDetail={toggleDetail} />
-              {detailOpen && <SourceDetail key={run.analysis.analysis_id} analysis={run.analysis} id={SOURCES_ID} />}
-            </div>
+            <SwitchCard key={run.analysis.analysis_id} analysis={run.analysis} id={COMPARISON_ID} />
+            <MonthsCard analysis={run.analysis} />
           </div>
+          <ScoresCard analysis={run.analysis} rotationConfirmed={rotationConfirmed} onConfirmRotation={onConfirmRotation} onChangeRotation={() => onOpenSetup(3)} />
+          <SourcesCard analysis={run.analysis} detailId={SOURCES_ID} detailOpen={detailOpen} onToggleDetail={toggleDetail} />
+          {detailOpen && <SourceDetail key={run.analysis.analysis_id} analysis={run.analysis} id={SOURCES_ID} />}
           <footer className="strip strip--tint">
             <span className="strip__icon">
               <InfoIcon />
