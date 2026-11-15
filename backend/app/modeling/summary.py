@@ -184,7 +184,20 @@ def field_evidence(b: Builder, current: Evaluated | None = None) -> tuple[list[d
                                               period=(f"{found.first_year}-01-01", f"{found.month}-28"), n_valid=found.years + 1, n_expected=None,
                                               note=f"The range is the usual one for that month. Each value covers a cell about {spec.native_resolution_m / 1000:g} km across, not your field alone."),
                          "series_id": None})
-    satellite_storage = missing("cm/yr", NullReason.NOT_CONFIGURED, NOT_CONFIGURED_MESSAGES["grace_fo"], datasets=["grace_fo"])
+    if g.storage is not None:
+        trend = g.storage
+        direction = "falling" if trend.slope < -0.1 else "rising" if trend.slope > 0.1 else "about steady"
+        satellite_storage = quantity(trend.slope, "cm/yr", kind=EvidenceKind.SATELLITE, tier=AccessTier.LIVE, datasets=["grace_fo"], low=trend.low, high=trend.high,
+                                     period=(trend.first.isoformat(), trend.last.isoformat()), n_valid=trend.months, n_expected=None,
+                                     note="All the water stored under a region about 300 km across, from soil down to deep groundwater; not your field alone.")
+        evidence.append({"id": "water-storage", "kind": "water_storage_trend", "title": "Water stored under the region, GRACE satellites",
+                         "summary": f"From {trend.first.year} to {trend.last.year} the water stored under this region has been {direction}, "
+                                    f"by about {abs(trend.slope):.1f} cm of water a year.",
+                         "quantity": satellite_storage, "series_id": None})
+    else:
+        state = g.states.get("grace_fo")
+        reason = state.null_reason if state and state.null_reason else NullReason.NOT_CONFIGURED
+        satellite_storage = missing("cm/yr", reason, (state.message if state and state.message else NOT_CONFIGURED_MESSAGES["grace_fo"]), datasets=["grace_fo"])
 
     if g.wells is not None:
         ground = quantity(g.wells.median_slope, g.wells.unit, kind=EvidenceKind.GROUND, tier=AccessTier.LIVE, datasets=["usgs_groundwater"], low=g.wells.low_slope, high=g.wells.high_slope,

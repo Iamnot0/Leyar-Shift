@@ -197,7 +197,7 @@ DATASETS: dict[str, DatasetSpec] = {
         _spec("nass_quickstats", "NASS QuickStats", "USDA NASS", "Reported yields, prices and planting dates",
               Scope.US_ONLY, EvidenceKind.GROUND, AccessTier.LIVE, None, "https://quickstats.nass.usda.gov/"),
         _spec("grace_fo", "GRACE and GRACE-FO water storage", "NASA JPL, PO.DAAC", "Change in total water stored under the region since 2002",
-              Scope.GLOBAL, EvidenceKind.SATELLITE, AccessTier.SNAPSHOT, 300000, "https://podaac.jpl.nasa.gov/dataset/TELLUS_GRAC-GRFO_MASCON_CRI_GRID_RL06.3_V4", configured=False),
+              Scope.GLOBAL, EvidenceKind.SATELLITE, AccessTier.LIVE, 300000, "https://podaac.jpl.nasa.gov/dataset/TELLUS_GRAC-GRFO_MASCON_CRI_GRID_RL06.3_V4"),
         _spec("smap_l4", "SMAP Level-4 root-zone soil moisture", "NASA, NSIDC DAAC", "Soil moisture in the root zone since 2015",
               Scope.GLOBAL, EvidenceKind.MODEL, AccessTier.SNAPSHOT, 9000, "https://nsidc.org/data/spl4smgp", configured=False),
         _spec("gpm_imerg", "GPM IMERG rainfall", "NASA GES DISC", "Rain each month since 2001, measured from satellites",
@@ -238,7 +238,7 @@ NOT_CONFIGURED_MESSAGES = {
     "nldas": "NLDAS needs a NASA Earthdata login, which is not set. Soil water comes from NASA POWER.",
     "openet": "OpenET needs its own key, which is not set. The water crops need comes from the water model alone.",
     "ecostress": "ECOSTRESS has not been loaded for this location in this version.",
-    "grace_fo": "GRACE water storage is not used in this version. Where the United States has wells nearby, their measured water levels are shown instead.",
+    "grace_fo": "GRACE needs a NASA Earthdata login, which is not set. Where the United States has wells nearby, their measured water levels are shown instead.",
     "smap_l4": "SMAP soil moisture is not used in this version. Soil moisture comes from NASA POWER.",
 }
 

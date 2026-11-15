@@ -11,7 +11,7 @@ from typing import Any, Callable
 
 import numpy as np
 
-from app.adapters import cdl, faostat, groundwater, imerg, ldas, nass, openet, places, raster, soil, weather
+from app.adapters import cdl, faostat, grace, groundwater, imerg, ldas, nass, openet, places, raster, soil, weather
 from app.adapters.base import Allowance, Fetcher, SourceState
 from app.core import config
 from app.core.config import Settings
@@ -84,6 +84,7 @@ class Gathered:
     pass_days: list[date] = field(default_factory=list)
     wells: groundwater.WellTrend | None = None
     soil_water: dict[str, ldas.SoilWater] = field(default_factory=dict)
+    storage: grace.StorageTrend | None = None
     frost_free_days: float = 0.0
 
 
@@ -209,6 +210,7 @@ def gather(request: dict[str, Any], ctx: Context, progress: Callable[[str], None
                    else pool.submit(lambda: ({}, SourceState.not_configured("gpm_imerg", IMERG_NOT_READ))))
         ldas_f = {source: pool.submit(ldas.soil_water, fetcher, token, source, lon, lat, today=ctx.today)
                   for source in (("gldas", "nldas") if place.conterminous_us else ("gldas",))}
+        grace_f = pool.submit(grace.storage_trend, fetcher, token, lon, lat)
         soil_f = pool.submit(soil.fetch_ssurgo, fetcher, grid) if place.conterminous_us else pool.submit(soil.fetch_soilgrids, fetcher, lon, lat)
         elev_f = pool.submit(raster.elevation, fetcher, grid)
         cdl_hist_f = pool.submit(cdl.field_history, fetcher, grid) if place.conterminous_us else None
@@ -221,6 +223,7 @@ def gather(request: dict[str, Any], ctx: Context, progress: Callable[[str], None
         wells_f = pool.submit(groundwater.fetch_well_trend, fetcher, lon, lat, since=2000) if place.conterminous_us else None
 
         gathered.imerg, states["gpm_imerg"] = imerg_f.result()
+        gathered.storage, states["grace_fo"] = grace_f.result()
         for source, future in ldas_f.items():
             found, states[source] = future.result()
             if found is not None:
