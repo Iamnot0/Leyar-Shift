@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import type { ApiClient, ApiError } from '../api/client';
+import type { ApiError } from '../api/client';
 import { useResolvedPlace } from '../api/places';
 import type { CoverageState, FieldPlan, RunState } from '../app/plan';
 import { centroid } from '../lib/geo';
@@ -9,18 +8,15 @@ import { AnswerCard, Card, CardState, Reminder } from '../components/ui/kit';
 import { Segmented } from '../components/ui/Segmented';
 import { HEAT_WORDS, RAIN_WORDS, REMINDER } from '../content/copy';
 import { WorkingState } from '../working/WorkingState';
-import { BestFitCard, MonthsCard, ScoresCard, SourceDetail, SourcesCard, SwitchCard } from './cards';
+import { BestFitCard, MonthsCard, ScoresCard, SourcesCard, SwitchCard } from './cards';
 import { FieldCard, type PictureProps } from './FieldCard';
-import { ProcessingPanel } from './ProcessingPanel';
 
 const COMPARISON_ID = 'comparison';
-const SOURCES_ID = 'every-source';
 
 const RAIN_OPTIONS = (Object.keys(RAIN_WORDS) as RainfallScenario[]).map((value) => ({ value, label: RAIN_WORDS[value] }));
 const HEAT_OPTIONS = (Object.keys(HEAT_WORDS) as TemperatureScenario[]).map((value) => ({ value, label: HEAT_WORDS[value] }));
 
 interface ResultsScreenProps extends PictureProps {
-  client: ApiClient;
   field: FieldPlan;
   run: RunState;
   coverage: CoverageState;
@@ -83,16 +79,10 @@ export function EmptyResultsScreen({ onOpenSetup }: { onOpenSetup: () => void })
 
 /** The full yearly comparison: the answer first, then why, then what could go wrong, then where it all comes from. */
 export function ResultsScreen(props: ResultsScreenProps) {
-  const { client, field, run, coverage, scenario, rotationConfirmed, weatherYears, onScenarioChange, onOpenSetup, onConfirmRotation, onRetry, ...picture } = props;
-  const [detailOpen, setDetailOpen] = useState(false);
+  const { field, run, coverage, scenario, rotationConfirmed, weatherYears, onScenarioChange, onOpenSetup, onConfirmRotation, onRetry, ...picture } = props;
   const scenarioIsNormal = scenario.rainfall === 'normal' && scenario.temperature === 'normal';
   const [lon, lat] = centroid(field.geometry);
   const headingPlace = useResolvedPlace(lat, lon, field.name, true, 'your field');
-
-  const toggleDetail = () => {
-    setDetailOpen((open) => !open);
-    if (!detailOpen) window.setTimeout(() => document.getElementById(SOURCES_ID)?.scrollIntoView({ block: 'start' }), 0);
-  };
 
   return (
     <>
@@ -111,7 +101,6 @@ export function ResultsScreen(props: ResultsScreenProps) {
             <BestFitCard analysis={run.analysis} comparisonId={COMPARISON_ID} onChangePriorities={() => onOpenSetup(2)} />
             <FieldCard field={field} analysis={run.analysis} {...picture} />
           </div>
-          <ProcessingPanel key={run.analysis.analysis_id} client={client} analysisId={run.analysis.analysis_id} />
           <section className="strip" aria-labelledby="kind-of-year">
             <div className="strip__body">
               <h2 id="kind-of-year" className="card__title card__title--small">
@@ -130,8 +119,7 @@ export function ResultsScreen(props: ResultsScreenProps) {
             <MonthsCard analysis={run.analysis} />
           </div>
           <ScoresCard analysis={run.analysis} rotationConfirmed={rotationConfirmed} onConfirmRotation={onConfirmRotation} onChangeRotation={() => onOpenSetup(3)} />
-          <SourcesCard analysis={run.analysis} detailId={SOURCES_ID} detailOpen={detailOpen} onToggleDetail={toggleDetail} />
-          {detailOpen && <SourceDetail key={run.analysis.analysis_id} analysis={run.analysis} id={SOURCES_ID} />}
+          <SourcesCard analysis={run.analysis} />
           <footer className="strip strip--tint">
             <span className="strip__icon">
               <InfoIcon />

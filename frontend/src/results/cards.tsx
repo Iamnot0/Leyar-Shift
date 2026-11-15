@@ -5,15 +5,13 @@ import { Drawer } from '../components/ui/Drawer';
 import { EvidenceTag } from '../components/ui/EvidenceTag';
 import { AnswerCard, Card, Pill } from '../components/ui/kit';
 import { CropPhotos } from './CropPhotos';
-import { ScoreList } from '../components/ui/ScoreList';
 import { RibbonLegend, SeasonRibbon } from '../components/ui/SeasonRibbon';
-import { SourceList } from '../components/ui/SourceList';
 import { coveredCount } from '../lib/evidence';
 import { LocalJudgment, MissingValue, QuantityView } from '../components/ui/Values';
 import { CHANGE_LEVEL_WORDS, EVIDENCE_WORDS, RISK_SUBJECT, RISK_WORDS, SCORE_WORDS } from '../content/copy';
 import { monthlyRisk } from '../lib/calendar';
 import { deltaScale } from '../lib/charts';
-import { allFigures, describeResolution, sharedSource, tallyEvidence } from '../lib/evidence';
+import { allFigures, sharedSource, tallyEvidence } from '../lib/evidence';
 import { MONTHS, formatValue, joinList, monthSpanWords, numberWord, sentenceCase } from '../lib/format';
 import { OwnFiguresControl } from './OwnFiguresControl';
 import { ScoreChart } from './ScoreChart';
@@ -501,14 +499,11 @@ export function MonthsCard({ analysis }: { analysis: Analysis }) {
 
 interface SourcesProps {
   analysis: Analysis;
-  detailId: string;
-  detailOpen: boolean;
-  onToggleDetail: () => void;
 }
 
 const KIND_ORDER: EvidenceKind[] = ['satellite_observation', 'ground_observation', 'soil_survey_baseline', 'model_output'];
 
-export function SourcesCard({ analysis, detailId, detailOpen, onToggleDetail }: SourcesProps) {
+export function SourcesCard({ analysis }: SourcesProps) {
   const covered = coveredCount(analysis.datasets);
   const total = analysis.datasets.length;
   const tally = tallyEvidence(allFigures(analysis));
@@ -539,93 +534,9 @@ export function SourcesCard({ analysis, detailId, detailOpen, onToggleDetail }: 
           </p>
         )}
       </div>
-      <button type="button" className="link-button" aria-expanded={detailOpen} aria-controls={detailId} onClick={onToggleDetail}>
-        {detailOpen ? 'Hide the sources' : 'See every source for this field'}
-      </button>
     </Card>
   );
 }
 
-const AGREEMENT_WORDS = {
-  consistent: 'The two agree.',
-  differs: 'The two do not agree. Trust neither alone, and check on your own land.',
-  not_comparable: 'There is no reading from the ground to set against the satellite here.',
-} as const;
 
 /** Every source and every number, for the farmer or agronomist who wants to check the working. */
-export function SourceDetail({ analysis, id }: { analysis: Analysis; id: string }) {
-  const [rotationId, setRotationId] = useState(analysis.rotations[0].id);
-  const selectId = useId();
-  const rotation = analysis.rotations.find((candidate) => candidate.id === rotationId) ?? analysis.rotations[0];
-  return (
-    <Card id={id} title="Every source for this field">
-      <SourceList datasets={analysis.datasets} />
-      <Drawer title="What we know about your field" count={analysis.field_evidence.length}>
-        <dl className="measures">
-          {analysis.field_evidence.map((item) => (
-            <div key={item.id} className="measures__row">
-              <dt>
-                <span className="measures__label">{item.title}</span>
-                <span className="measures__explain">
-                  {item.summary}
-                  {item.quantity.value !== null && (item.quantity.native_resolution_m ?? 0) >= 1000 && ` ${describeResolution(item.quantity)}.`}
-                </span>
-              </dt>
-              <dd>
-                <QuantityView quantity={item.quantity} />
-              </dd>
-            </div>
-          ))}
-        </dl>
-      </Drawer>
-      {analysis.comparisons.length > 0 && (
-        <Drawer title="Satellite and ground readings, side by side" count={analysis.comparisons.length}>
-          <p className="secondary">Where we have both, we show both. We never blend them into one number.</p>
-          {analysis.comparisons.map((pair) => (
-            <section key={pair.id} className="pair">
-              <h3>{pair.label}</h3>
-              <div className="pair__sides">
-                <div className="pair__side">
-                  <h4>From the satellite</h4>
-                  <QuantityView quantity={pair.satellite} />
-                </div>
-                <div className="pair__side">
-                  <h4>On the ground</h4>
-                  <QuantityView quantity={pair.ground} />
-                </div>
-              </div>
-              <p className="secondary">
-                {AGREEMENT_WORDS[pair.agreement]}
-                {pair.difference && pair.difference.value !== null && ` They differ by ${formatValue(pair.difference.value, pair.difference.unit)}.`}
-                {pair.ground_distance_km !== null && ` The nearest ground site is about ${Math.round(pair.ground_distance_km)} km away.`}
-              </p>
-            </section>
-          ))}
-        </Drawer>
-      )}
-      <Drawer title="Every number for each rotation" count={rotation.scores.length}>
-        <div className="field">
-          <label htmlFor={selectId}>Rotation</label>
-          <select id={selectId} value={rotation.id} onChange={(event) => setRotationId(event.target.value)}>
-            {analysis.rotations.map((candidate) => (
-              <option key={candidate.id} value={candidate.id}>
-                {shortName(candidate)}
-              </option>
-            ))}
-          </select>
-        </div>
-        {rotation.role !== 'current' && <p className="secondary">This rotation has not been grown on your field, so every number for it is worked out by our model.</p>}
-        <ScoreList scores={rotation.scores} rotation={rotation} />
-      </Drawer>
-      {analysis.gaps.length > 0 && (
-        <Drawer title="What we do not know" count={analysis.gaps.length}>
-          <ul className="secondary">
-            {analysis.gaps.map((gap) => (
-              <li key={gap.id}>{gap.text}</li>
-            ))}
-          </ul>
-        </Drawer>
-      )}
-    </Card>
-  );
-}

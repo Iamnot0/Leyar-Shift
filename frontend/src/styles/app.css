@@ -657,158 +657,62 @@ svg {
   min-width: 0;
 }
 
-/* Processing: the steps behind a result as a short trace, closed until asked for. */
-.processing {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-card);
-  background: var(--card);
+/* The waiting screen's live log: each stage the engine reports, with the second it was seen. */
+.live-log {
+  display: grid;
+  gap: 8px;
+  margin-block-start: 8px;
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--on-deep) 18%, transparent);
+  border-radius: var(--radius-panel);
 }
 
-.processing__head {
+.live-log__head {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 8px 12px;
-  min-height: var(--target-min);
-  padding: 12px 20px;
-  cursor: pointer;
-  list-style: none;
+  gap: 10px;
 }
 
-.processing__head::-webkit-details-marker {
-  display: none;
-}
-
-.processing__head::after {
-  content: '';
-  width: 8px;
-  height: 8px;
+.live-log__elapsed {
   margin-inline-start: auto;
-  border-block-end: 2px solid currentColor;
-  border-inline-end: 2px solid currentColor;
-  transform: rotate(45deg);
-  transition: transform var(--motion-duration) var(--motion-easing);
-}
-
-.processing[open] > .processing__head::after {
-  transform: rotate(-135deg);
-}
-
-.processing__title {
-  font-weight: 700;
-}
-
-.processing__meta {
-  color: var(--text-2);
+  color: var(--on-deep-2);
   font-size: var(--size-secondary);
 }
 
-.processing__body {
+.live-log__list {
   display: grid;
-  gap: 16px;
-  padding: 4px 20px 20px;
-  border-block-start: 1px solid var(--border);
-}
-
-.processing__thinking {
-  padding-block-start: 12px;
-  color: var(--text-2);
-}
-
-.trace {
-  display: grid;
-  gap: 0;
-  margin: 0;
-  padding: 12px 0 0;
-  list-style: none;
-}
-
-.trace__step {
-  position: relative;
-  display: grid;
-  grid-template-columns: 24px minmax(0, 1fr);
-  gap: 12px;
-  padding-block-end: 16px;
-  animation: trace-in 320ms var(--motion-easing) both;
-  animation-delay: calc(var(--step) * 110ms);
-}
-
-/* The thread that joins one step to the next. */
-.trace__step::before {
-  content: '';
-  position: absolute;
-  inset-block: 26px 0;
-  inset-inline-start: 11px;
-  width: 2px;
-  background: var(--border);
-}
-
-.trace__step:last-child::before {
-  display: none;
-}
-
-.trace__mark {
-  display: grid;
-  place-items: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 999px;
-  background: var(--green-tint);
-  color: var(--on-green-tint);
-}
-
-.trace__body {
-  display: grid;
-  gap: 4px;
-  min-width: 0;
-}
-
-.trace__title {
-  font-weight: 600;
-}
-
-.trace__method {
-  color: var(--text-2);
-  font-size: var(--size-secondary);
-}
-
-.trace__facts {
-  display: grid;
-  gap: 2px;
+  gap: 6px;
   margin: 0;
   padding: 0;
   font-size: var(--size-secondary);
   list-style: none;
 }
 
-.trace__label {
-  color: var(--text-2);
-}
-
-.trace__more > summary {
-  width: fit-content;
-  min-height: var(--target-min);
-  padding-block: 12px;
-  color: var(--green);
-  font-size: var(--size-secondary);
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.processing__summary {
+.live-log__list > li {
   display: grid;
-  gap: 6px;
-  padding: 16px 18px;
-  border-radius: var(--radius-panel);
-  background: var(--ground);
-  animation: trace-in 320ms var(--motion-easing) both;
-  animation-delay: calc(var(--step) * 110ms);
+  grid-template-columns: 3.2em 16px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  animation: log-in 240ms var(--motion-easing) both;
 }
 
-@keyframes trace-in {
+.live-log__list > li[data-state='done'] {
+  color: var(--on-deep-2);
+}
+
+.live-log__time {
+  color: var(--on-deep-2);
+}
+
+.live-log__list .spinner {
+  width: 14px;
+  height: 14px;
+}
+
+@keyframes log-in {
   from {
     opacity: 0;
-    transform: translateY(4px);
+    transform: translateY(3px);
   }
 
   to {
@@ -818,8 +722,7 @@ svg {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .trace__step,
-  .processing__summary {
+  .live-log__list > li {
     animation: none;
   }
 }
@@ -3995,5 +3898,75 @@ details.drawer[open] > summary::after {
 
   details.drawer > .drawer__body {
     display: grid;
+  }
+}
+
+/* ---------------------------------------------------------------- site footer */
+
+.site-footer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px 24px;
+  max-width: var(--space-page-max);
+  margin-inline: auto;
+  padding-block: 20px max(24px, calc(env(safe-area-inset-bottom, 0px) + 16px));
+  padding-inline-start: max(var(--space-gutter), calc(env(safe-area-inset-left, 0px) + var(--space-gutter)));
+  padding-inline-end: max(var(--space-gutter), calc(env(safe-area-inset-right, 0px) + var(--space-gutter)));
+  border-block-start: 1px solid var(--border);
+  color: var(--text-2);
+  font-size: var(--size-secondary);
+}
+
+.site-footer__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  justify-self: start;
+  min-height: var(--target-min);
+  border-radius: var(--radius-control);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.site-footer__middle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 16px;
+  margin: 0;
+}
+
+.site-footer__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min);
+  color: var(--green);
+  font-weight: 600;
+  text-underline-offset: 3px;
+}
+
+.site-footer__event {
+  justify-self: end;
+  margin: 0;
+  font-weight: 600;
+  text-align: end;
+}
+
+@media (max-width: 640px) {
+  .site-footer {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    text-align: center;
+  }
+
+  .site-footer__brand,
+  .site-footer__event {
+    justify-self: center;
+    text-align: center;
   }
 }

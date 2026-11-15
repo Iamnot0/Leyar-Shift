@@ -1,7 +1,9 @@
+import { useEffect, useState } from 'react';
 import { cleanPlaceName, useResolvedPlace } from '../api/places';
 import { labelOf, useMeta } from '../app/context';
 import type { CoverageState, FieldPlan } from '../app/plan';
 import { CheckIcon } from '../components/ui/Icons';
+import { Pill } from '../components/ui/kit';
 import { coveredCount } from '../lib/evidence';
 import { formatHectares } from '../lib/format';
 import { areaHa, centroid } from '../lib/geo';
@@ -32,9 +34,29 @@ function Mark({ state }: { state: StepState }) {
 
 const STATE_WORDS: Record<StepState, string> = { done: 'Done', current: 'Working on it', waiting: 'Waiting' };
 
+const clock = (ms: number) => {
+  const seconds = Math.max(0, Math.floor(ms / 1000));
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+};
+
+/** Every stage the engine reports, in the order it reported them, with the second each one was seen. */
+function useStageLog(stage: string | null) {
+  const [started] = useState(() => Date.now());
+  const [now, setNow] = useState(started);
+  const [log, setLog] = useState<{ id: string; at: number }[]>([]);
+  // A newly reported stage is added while rendering, the way React keeps state in step with a prop.
+  if (stage !== null && log.at(-1)?.id !== stage) setLog([...log, { id: stage, at: now }]);
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+  return { log, started, now };
+}
+
 /** Shown while the comparison is worked out. The steps follow the stages the backend reports, never a timer. */
 export function WorkingState({ field, stage, coverage, weatherYears, ...picture }: WorkingStateProps) {
   const meta = useMeta();
+  const { log, started, now } = useStageLog(stage);
   const order = meta.job_stages.map((entry) => entry.id);
   const at = stage === null ? -1 : order.indexOf(stage);
   const scoringAt = order.indexOf(SCORING_FROM);
@@ -95,6 +117,32 @@ export function WorkingState({ field, stage, coverage, weatherYears, ...picture 
               · {formatHectares(areaHa(field.geometry))} ha{subtitle ? ` · ${subtitle}` : ''}
             </span>
           </p>
+          <section className="live-log" aria-labelledby="live-log-title">
+            <p className="live-log__head">
+              <strong id="live-log-title">Processing</strong>
+              <Pill tone="neutral">Live</Pill>
+              <span className="live-log__elapsed number">{clock(now - started)}</span>
+            </p>
+            <ol className="live-log__list" aria-live="polite">
+              {log.length === 0 && (
+                <li data-state="current">
+                  <span className="live-log__time number">{clock(0)}</span>
+                  <span className="spinner" aria-hidden="true" />
+                  <span>Sending your field to the engine</span>
+                </li>
+              )}
+              {log.map((entry, index) => {
+                const current = index === log.length - 1;
+                return (
+                  <li key={entry.id} data-state={current ? 'current' : 'done'}>
+                    <span className="live-log__time number">{clock(entry.at - started)}</span>
+                    {current ? <span className="spinner" aria-hidden="true" /> : <CheckIcon size={14} />}
+                    <span>{labelOf(meta.job_stages, entry.id)}</span>
+                  </li>
+                );
+              })}
+            </ol>
+          </section>
         </div>
       </section>
       <div className="row" aria-hidden="true">

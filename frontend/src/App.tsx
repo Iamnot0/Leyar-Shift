@@ -4,6 +4,7 @@ import { connect, type Connection } from './api/source';
 import { MetaContext } from './app/context';
 import { Planner } from './app/Planner';
 import { Card, CardState, Reminder } from './components/ui/kit';
+import { Footer } from './shell/Footer';
 import { Header } from './shell/Header';
 import { DEFAULT_THEME, themes, type ThemeName } from './styles/tokens.generated';
 
@@ -95,6 +96,7 @@ export default function App() {
           </main>
         </>
       )}
+      <Footer theme={theme} />
       <Analytics mode="production" />
     </>
   );
