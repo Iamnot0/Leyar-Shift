@@ -336,7 +336,7 @@ export function LandingScreen({ hasField, onOpenSetup, onOpenOverview, onOpenExa
         </video>
         <div className="hero__copy">
           <h1 id="hero-title" className="hero__title">
-            Plan your next crop
+            Plan your next <span className="hero__accent">crop</span>
           </h1>
           <p className="hero__lead">See which crop rotation fits your field best, for water, income and weather risk, from NASA Earth data.</p>
         </div>

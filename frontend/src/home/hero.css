@@ -21,7 +21,7 @@
 .hero {
   position: relative;
   display: grid;
-  align-items: end;
+  align-items: center;
   min-height: min(82vh, 780px);
   overflow: hidden;
   background: var(--green-deep) url('/hero/hero.jpg') center / cover no-repeat;
@@ -41,8 +41,8 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(90% 70% at 50% 60%, transparent 30%, color-mix(in srgb, #000 45%, transparent) 100%),
-    linear-gradient(to top, color-mix(in srgb, var(--green-deep) 90%, transparent) 0%, color-mix(in srgb, var(--green-deep) 45%, transparent) 40%, transparent 72%);
+    radial-gradient(55% 50% at 50% 50%, color-mix(in srgb, #000 48%, transparent) 0%, transparent 85%),
+    linear-gradient(to top, color-mix(in srgb, var(--green-deep) 75%, transparent) 0%, transparent 40%);
   pointer-events: none;
 }
 
@@ -57,7 +57,7 @@
   width: 100%;
   max-width: var(--space-page-max);
   text-align: center;
-  padding-block: clamp(24px, 5vw, 56px) clamp(56px, 7vw, 88px);
+  padding-block: clamp(56px, 7vw, 96px);
   padding-inline: max(var(--space-gutter), calc(env(safe-area-inset-left, 0px) + var(--space-gutter)));
   color: var(--on-deep);
 }
@@ -69,6 +69,10 @@
   font-weight: 700;
   letter-spacing: -0.035em;
   line-height: 0.98;
+}
+
+.hero__accent {
+  color: var(--amber);
 }
 
 .hero__lead {
@@ -93,10 +97,10 @@
 .hero__credit {
   position: absolute;
   z-index: 1;
-  inset-inline-end: 12px;
-  inset-block-end: 10px;
-  max-width: calc(100% - 24px);
+  inset-inline: var(--space-gutter);
+  inset-block-end: 12px;
   color: var(--on-deep-2);
+  text-align: end;
   font-size: var(--size-min);
 }
 
