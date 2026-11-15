@@ -11,6 +11,7 @@ import { EmptyHomeScreen, HomeScreen } from '../home/HomeScreen';
 import { EmptyResultsScreen, ResultsScreen } from '../results/ResultsScreen';
 import type { CropsState, HistoryState, RotationAnswer } from '../setup/RotationQuestion';
 import { SetupScreen } from '../setup/SetupScreen';
+import { ResourcesScreen } from '../shell/ResourcesScreen';
 import { Header } from '../shell/Header';
 import type { ThemeName } from '../styles/tokens.generated';
 import { AnalysisContext } from './context';
@@ -302,7 +303,7 @@ export function Planner({ client, theme, notices, onThemeChange }: PlannerProps)
 
   return (
     <AnalysisContext value={scope}>
-      <Header live={reachable} theme={theme} onThemeChange={onThemeChange} screen={screen === 'setup' ? null : screen} field={headerField} onChangeField={() => navigate({ screen: 'setup', step: 0 })} />
+      <Header live={reachable} theme={theme} onThemeChange={onThemeChange} screen={screen === 'setup' || screen === 'resources' ? null : screen} field={headerField} onChangeField={() => navigate({ screen: 'setup', step: 0 })} />
       <main id="content" className="page" tabIndex={-1}>
         {notices}
         {screen === 'setup' ? (
@@ -324,6 +325,11 @@ export function Planner({ client, theme, notices, onThemeChange }: PlannerProps)
             onRetryCrops={() => field && loadCrops(field.geometry)}
             onRetryHistory={() => field && loadHistory(field.geometry)}
             onCompare={compare}
+          />
+        ) : screen === 'resources' ? (
+          <ResourcesScreen
+            fieldName={plan ? resolvedHeaderName : null}
+            datasets={run.status === 'done' ? run.analysis.datasets : coverage.status === 'ready' ? coverage.coverage.datasets : null}
           />
         ) : screen === 'home' ? (
           plan ? (
