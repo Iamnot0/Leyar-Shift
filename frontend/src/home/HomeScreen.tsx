@@ -338,7 +338,7 @@ export function LandingScreen({ hasField, onOpenSetup, onOpenOverview, onOpenExa
           <h1 id="hero-title" className="hero__title">
             Plan your next <span className="hero__accent">crop</span>
           </h1>
-          <p className="hero__lead">See which crop rotation fits your field best, for water, income and weather risk, from NASA Earth data.</p>
+          <p className="hero__lead">See which crop rotation fits your field best, for water, income and risk from bad weather, from NASA Earth data.</p>
         </div>
         <p className="hero__credit">{HERO_CREDIT}</p>
       </section>
@@ -438,7 +438,7 @@ const HOW_IT_WORKS: [string, string][] = [
   ['Mark your field', 'Draw it on a satellite map, or type its size and place a square.'],
   ['Tell us how you farm', 'How it gets water, what equipment you have, and what matters most to you.'],
   ['Confirm what you grow', 'In the US it is read from the USDA crop map. Anywhere else, you pick it.'],
-  ['Compare rotations', 'The best fit beside what you grow now: water, income and weather risk.'],
+  ['Compare rotations', 'The best fit beside what you grow now: water, income and risk from bad weather.'],
 ];
 
 const NASA_HIGHLIGHTS = ['NASA POWER weather', 'GPM IMERG rainfall', 'GRACE-FO groundwater', 'GLDAS and NLDAS soil water', 'MODIS greenness', 'NASADEM elevation', 'Landsat and Sentinel-2'];

@@ -450,7 +450,7 @@ export function MonthsCard({ analysis }: { analysis: Analysis }) {
   const summary = riskSummary(rows);
 
   return (
-    <Card className="narrow" title="Weather risk by month">
+    <Card className="narrow" title="Bad weather by month">
       <p className="secondary">When the weather is most likely to hurt what you grow now, {nameInSentence(current)}.</p>
       {calendar.null_reason ? (
         <MissingValue reason={calendar.null_reason} explanation={calendar.null_explanation} />
