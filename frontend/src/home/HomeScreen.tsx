@@ -339,30 +339,24 @@ export function LandingScreen({ hasField, onOpenSetup, onOpenOverview, onOpenExa
             Plan your next crop
           </h1>
           <p className="hero__lead">See which crop rotation fits your field best, for water, income and weather risk, from NASA Earth data.</p>
-          <div className="hero__actions">
-            {hasField ? (
-              <>
-                <button type="button" className="button button--amber" onClick={onOpenOverview}>
-                  Open your field overview
-                </button>
-                <button type="button" className="button button--on-deep" onClick={onOpenSetup}>
-                  Set up another field
-                </button>
-              </>
-            ) : (
-              <>
-                <button type="button" className="button button--amber" onClick={onOpenSetup}>
-                  Set up your field
-                </button>
-                <a className="button button--on-deep" href="#samples">
-                  Try a sample field
-                </a>
-              </>
-            )}
-          </div>
         </div>
         <p className="hero__credit">{HERO_CREDIT}</p>
       </section>
+
+      <div className="landing__cta">
+        {hasField ? (
+          <button type="button" className="button button--amber" onClick={onOpenOverview}>
+            Open your field overview
+          </button>
+        ) : (
+          <button type="button" className="button button--amber" onClick={onOpenSetup}>
+            Try Leyar Shift
+          </button>
+        )}
+        <a className="button" href="#samples">
+          View a demo
+        </a>
+      </div>
 
       <section className="landing__section" aria-labelledby="how-title">
         <h2 id="how-title" className="landing__heading">

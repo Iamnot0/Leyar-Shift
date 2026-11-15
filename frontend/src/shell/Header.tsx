@@ -29,7 +29,7 @@ export function Header({ live, theme, onThemeChange, screen = null, field = null
           {live ? 'Live data' : 'Offline'}
         </p>
       )}
-      {onChangeField && (
+      {onChangeField && screen !== 'home' && (
         <nav className="header-nav" aria-label="Views">
           <a className="header-nav__link" href="/overview" aria-current={screen === 'overview' ? 'page' : undefined}>
             Overview

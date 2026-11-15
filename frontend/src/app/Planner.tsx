@@ -304,7 +304,7 @@ export function Planner({ client, theme, notices, onThemeChange }: PlannerProps)
   return (
     <AnalysisContext value={scope}>
       <Header live={reachable} theme={theme} onThemeChange={onThemeChange} screen={screen} field={headerField} onChangeField={() => navigate({ screen: 'setup', step: 0 })} />
-      <main id="content" className="page" tabIndex={-1}>
+      <main id="content" className={screen === 'home' ? 'page page--landing' : 'page'} tabIndex={-1}>
         {notices}
         {screen === 'setup' ? (
           <SetupScreen
