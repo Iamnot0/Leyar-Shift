@@ -4013,3 +4013,44 @@ details.drawer[open] > summary::after {
     text-align: center;
   }
 }
+
+/* Theme switch: the new theme grows as a circle from the toggle (see shell/themeReveal.ts), so the default cross-fade is off. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+.theme-toggle {
+  position: relative;
+  overflow: hidden;
+}
+
+.theme-toggle__icon {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  transition: transform 400ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 300ms ease;
+}
+
+/* Light shows the moon (switch to dark); dark shows the sun (switch to light). */
+.theme-toggle__icon--sun {
+  opacity: 0;
+  transform: rotate(90deg) scale(0.3);
+}
+
+.theme-toggle__icon--moon {
+  opacity: 1;
+  transform: none;
+}
+
+:root[data-theme='dark'] .theme-toggle__icon--sun {
+  opacity: 1;
+  transform: none;
+}
+
+:root[data-theme='dark'] .theme-toggle__icon--moon {
+  opacity: 0;
+  transform: rotate(-90deg) scale(0.3);
+}

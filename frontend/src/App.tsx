@@ -1,5 +1,5 @@
 import { Analytics } from '@vercel/analytics/react';
-import { useEffect, useState, type MouseEvent } from 'react';
+import { useEffect, useLayoutEffect, useState, type MouseEvent } from 'react';
 import { connect, type Connection } from './api/source';
 import { MetaContext } from './app/context';
 import { Planner } from './app/Planner';
@@ -35,7 +35,7 @@ export default function App() {
   const [boot, setBoot] = useState<Boot>({ status: 'connecting' });
   const [attempt, setAttempt] = useState(0);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     document.documentElement.dataset.theme = theme;
     const metaTheme = document.querySelector('meta[name="theme-color"]');
     if (metaTheme) metaTheme.setAttribute('content', theme === 'dark' ? themes.dark.ground : themes.light['green-deep']);

@@ -1,6 +1,7 @@
 import { MapPinIcon, MoonIcon, SunIcon, SwitchIcon } from '../components/ui/Icons';
 import type { ThemeName } from '../styles/tokens.generated';
 import { Logo } from './Logo';
+import { revealTheme } from './themeReveal';
 
 interface HeaderProps {
   /** Whether the data service is answering. Null until the app has asked. */
@@ -70,8 +71,21 @@ export function Header({ live, theme, onThemeChange, screen = null, field = null
           </button>
         )
       )}
-      <button type="button" className="icon-button" aria-label={`Switch to the ${next} theme`} onClick={() => onThemeChange(next)}>
-        {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
+      <button
+        type="button"
+        className="icon-button theme-toggle"
+        aria-label={`Switch to the ${next} theme`}
+        onClick={(event) => {
+          const button = event.currentTarget;
+          revealTheme(button, () => onThemeChange(next));
+        }}
+      >
+        <span className="theme-toggle__icon theme-toggle__icon--sun" aria-hidden="true">
+          <SunIcon />
+        </span>
+        <span className="theme-toggle__icon theme-toggle__icon--moon" aria-hidden="true">
+          <MoonIcon />
+        </span>
       </button>
     </header>
   );
