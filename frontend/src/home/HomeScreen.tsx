@@ -507,7 +507,7 @@ export function EmptyHomeScreen({ onOpenSetup, onOpenExample }: { onOpenSetup: (
 
       <div className="row row--split">
         <div className="wide home-stack">
-          <Card title={horizon === 'week' ? 'The week ahead' : horizon === 'month' ? 'Next month on your field' : 'A usual year on your field'}>
+          <Card title={horizon === 'week' ? '7-day forecast' : horizon === 'month' ? 'Next month' : 'Typical year'}>
             <CardState kind="empty" title={horizon === 'week' ? 'No forecast yet' : 'No weather pattern yet'}>
               Set up your field to see weather patterns and water needs for this period.
             </CardState>

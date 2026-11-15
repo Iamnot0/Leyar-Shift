@@ -254,7 +254,7 @@ function RotationDetail({ rotation, onChangeRotation, onConfirmRotation, confirm
           </div>
         )}
         {(checks.length > 0 || rotation.gaps.length > 0) && (
-          <Drawer title="What to check on your own land" count={checks.length + rotation.gaps.length}>
+          <Drawer title="Check these on your land" count={checks.length + rotation.gaps.length}>
             <ul className="plain-list">
               {checks.map((review) => (
                 <LocalJudgment key={review.topic} review={review} />
@@ -357,7 +357,7 @@ export function SwitchCard({ analysis, id }: { analysis: Analysis; id: string })
 
   if (!option) {
     return (
-      <Card id={id} className="wide" title="What changes if you switch">
+      <Card id={id} className="wide" title="Switch or stay">
         <p className="secondary">We found no other rotation to set against what you grow now. Change your answers to see more.</p>
       </Card>
     );
@@ -365,7 +365,7 @@ export function SwitchCard({ analysis, id }: { analysis: Analysis; id: string })
 
   const scale = deltaScale(option.tradeoffs);
   return (
-    <Card id={id} className="wide" title="What changes if you switch">
+    <Card id={id} className="wide" title="Switch or stay">
       <p className="secondary">
         From {nameInSentence(current)} to {nameInSentence(option)}.
       </p>
@@ -450,7 +450,7 @@ export function MonthsCard({ analysis }: { analysis: Analysis }) {
   const summary = riskSummary(rows);
 
   return (
-    <Card className="narrow" title="Months to watch">
+    <Card className="narrow" title="Weather risk by month">
       <p className="secondary">When the weather is most likely to hurt what you grow now, {nameInSentence(current)}.</p>
       {calendar.null_reason ? (
         <MissingValue reason={calendar.null_reason} explanation={calendar.null_explanation} />
@@ -509,7 +509,7 @@ export function SourcesCard({ analysis }: SourcesProps) {
   const tally = tallyEvidence(allFigures(analysis));
   const counted = tally.total - tally.missing;
   return (
-    <Card className="narrow card--quiet" title="Where the numbers come from">
+    <Card className="narrow card--quiet" title="Data sources">
       <p>
         {covered} of our {total} data sources cover your field. The rest don’t reach this area or aren’t connected yet.
       </p>

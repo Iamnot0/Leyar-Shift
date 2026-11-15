@@ -137,7 +137,7 @@ export function RotationQuestion({ coverage, history, crops, initialYears, initi
         <p className="note">
           {labelOf(meta.detection_bases, found.detection_basis)}: {meta.detection_bases.find((basis) => basis.id === found.detection_basis)?.description}
         </p>
-        <Drawer title="What the map shows, year by year" count={history.history.observed_years.length}>
+        <Drawer title="Crop map, year by year" count={history.history.observed_years.length}>
           <ul className="year-list">
             {history.history.observed_years.map((observed) => (
               <li key={observed.year}>

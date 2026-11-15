@@ -173,7 +173,7 @@ export function SoilCard({ surface, rootZone, loading }: SoilProps) {
 export function WeekOutlook({ days, loading, why, waterLossMm, onRetry }: WeatherProps & { waterLossMm: number | null }) {
   if (!days) {
     return (
-      <Card className="wide" title="The next 7 days">
+      <Card className="wide" title="7-day forecast">
         {loading ? (
           <CardState kind="loading" title="Fetching the forecast…" />
         ) : (
@@ -189,7 +189,7 @@ export function WeekOutlook({ days, loading, why, waterLossMm, onRetry }: Weathe
   const summary = waterLossMm === null ? `${rain} over the next ${days.length} days.` : `${rain} over the next ${days.length} days. The soil will lose about ${Math.round(waterLossMm)} mm in that time.`;
 
   return (
-    <Card className="wide" title="The next 7 days">
+    <Card className="wide" title="7-day forecast">
       <p>{summary}</p>
       <div className="scroll-x" tabIndex={0} role="group" aria-label="Day by day. Scroll sideways to see every day.">
         <ol className="days">
@@ -251,7 +251,7 @@ interface YearProps {
 export function MonthOutlookCard({ outlook, loading }: { outlook: Reading<MonthOutlook>; loading: boolean }) {
   if (!outlook.available) {
     return (
-      <Card className="wide" title="The next month">
+      <Card className="wide" title="Next month">
         {loading ? (
           <CardState kind="loading" title="Reading the long weather record for your field…" />
         ) : (
@@ -265,7 +265,7 @@ export function MonthOutlookCard({ outlook, loading }: { outlook: Reading<MonthO
   const monthName = MONTHS[outlook.month - 1] ?? 'next month';
   const span = outlook.recordYears ? `the record from ${outlook.recordYears}` : 'the long weather record';
   return (
-    <Card className="wide" title="The next month">
+    <Card className="wide" title="Next month">
       <p>
         What {monthName} usually brings here, from {span}.{outlook.usualPattern && ' This is the usual pattern, not a day-by-day forecast.'}
       </p>
@@ -296,7 +296,7 @@ function rainSeasonSentence(monthlyRainMm: number[] | null): string {
 export function YearOutlook({ climate, loading }: YearProps) {
   if (!climate.available) {
     return (
-      <Card className="wide" title="A usual year on your field">
+      <Card className="wide" title="Typical year">
         {loading ? <CardState kind="loading" title="Reading the long weather record for your field…" /> : <CardState kind="empty" title="No long weather record">{climate.why}</CardState>}
       </Card>
     );
@@ -308,7 +308,7 @@ export function YearOutlook({ climate, loading }: YearProps) {
       ? `Peak day about ${degrees(climate.hottestDayC)}.${climate.hotDayWords ? ` ${climate.hotDayWords}.` : ''}`
       : climate.hotDayWords;
   return (
-    <Card className="wide" title="A usual year on your field">
+    <Card className="wide" title="Typical year">
       <p>
         This field gets about {rain} mm of rain in a usual year{climate.recordYears ? `, going by the record from ${climate.recordYears}` : ''}.{rainSeasonSentence(climate.monthlyRainMm)}
       </p>
