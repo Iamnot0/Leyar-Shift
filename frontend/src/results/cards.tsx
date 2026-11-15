@@ -415,6 +415,14 @@ export function SwitchCard({ analysis, id }: { analysis: Analysis; id: string })
           })}
         </ul>
       </div>
+      <div className="switch-years">
+        <p className="switch-years__title">On your field now</p>
+        <SeasonRibbon calendar={current.cover_calendar} rotationName={shortName(current)} />
+        <p className="switch-years__title">After switching to {nameInSentence(option)}</p>
+        <div key={option.id} className="switch-years__after">
+          <SeasonRibbon calendar={option.cover_calendar} rotationName={shortName(option)} />
+        </div>
+      </div>
       <p className="secondary">{switchClosing(option, analysis.uncertainty.n_runs)}</p>
     </Card>
   );

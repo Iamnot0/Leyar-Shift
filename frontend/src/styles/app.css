@@ -4070,3 +4070,32 @@ details.drawer[open] > summary::after {
   opacity: 0;
   transform: rotate(-90deg) scale(0.3);
 }
+
+/* Switch or stay draws both rotations year by year, so picking another rotation visibly redraws the second one. */
+.switch-years {
+  display: grid;
+  gap: 10px;
+  padding-block-start: 14px;
+  border-block-start: 1px solid var(--border);
+}
+
+.switch-years__title {
+  font-weight: 600;
+}
+
+.switch-years__after {
+  animation: switch-years-in 320ms var(--motion-easing) both;
+}
+
+@keyframes switch-years-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .switch-years__after {
+    animation: none;
+  }
+}
