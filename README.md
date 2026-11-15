@@ -23,49 +23,9 @@ Leyar Shift helps a farmer choose their next crop rotation. Mark a field on a sa
 
 ## How it works
 
-```mermaid
-flowchart TB
-    A["Field and farmer answers<br/>boundary · water · equipment · priorities · current rotation"]
-    B["Weather<br/>NASA POWER daily, 25 years · GPM IMERG · ERA5 · 10-day forecast"]
-    C["Soil and terrain<br/>USDA SSURGO or ISRIC SoilGrids · NASADEM"]
-    D["Water and land<br/>GRACE and GRACE-FO · GLDAS · NLDAS · MODIS · Sentinel-2 · OpenET · USGS wells"]
-    E["Crops and markets<br/>USDA crop map · FAO-56 crop tables · NASS or FAOSTAT prices"]
-
-    ET("Reference evapotranspiration<br/>FAO-56 Penman-Monteith")
-    FIT("Crop suitability<br/>season length · heat · frost · water")
-    ROT("Rotation builder<br/>your rotation and the ones that fit")
-    GRID("Field grid<br/>soil layers · slope")
-    WB("Daily water balance<br/>6 soil layers · 500 weather years")
-    SC("Scoring<br/>6 scores, weighted by your priorities")
-    EV("Evidence checks<br/>model against satellite and wells")
-
-    O1["Best fit next to what you grow now"]
-    O2["Season calendar and bad weather by month"]
-    O3["Switch or stay"]
-    O4["Data sources and evidence"]
-
-    B --> ET --> FIT
-    E --> FIT --> ROT
-    A --> ROT
-    C --> GRID
-    ROT --> WB
-    ET --> WB
-    GRID --> WB
-    WB --> SC
-    E --> SC
-    D --> EV
-    SC --> O1
-    WB --> O2
-    SC --> O3
-    EV --> O4
-
-    classDef input fill:#dbe8f5,stroke:#1f3b57,color:#13231b
-    classDef step fill:#ffffff,stroke:#13231b,color:#13231b
-    classDef output fill:#d7efd2,stroke:#1d6a46,color:#13231b
-    class A,B,C,D,E input
-    class ET,FIT,ROT,GRID,WB,SC,EV step
-    class O1,O2,O3,O4 output
-```
+<p align="center">
+  <img src="docs/leyar-shift-flow.png" alt="Leyar Shift data flow: farmer answers, weather, soil, prices and water data feed the rotation builder, reference evapotranspiration, field grid, income records and satellite reading; these feed a 6-layer water balance over 500 weather years and evidence checks; scoring weighted by the farmer's priorities produces the best fit, switch or stay, season calendar and data sources." width="100%">
+</p>
 
 The six scores are water needed, soil health, soil washing away, risk from bad weather, breaking pest cycles and income. When two rotations land about equally, Leyar Shift says so instead of naming a winner. When a source has no data for a field, the screen says what is missing and why. No number on screen comes from a language model.
 
