@@ -2703,9 +2703,291 @@ details.drawer[open] > summary::after {
   margin-block-start: 6px;
 }
 
+/* Crop rotation score chart: one bar per rotation, the usual range as a whisker. */
+.score-chart {
+  --score-gutter: 32px;
+  --score-plot: 200px;
+  display: grid;
+  gap: 8px;
+}
+
+.score-chart__plot {
+  position: relative;
+  block-size: var(--score-plot);
+  margin-block-start: 8px;
+  padding-inline-start: var(--score-gutter);
+}
+
+.score-chart__grid {
+  position: absolute;
+  inset-inline: var(--score-gutter) 0;
+  inset-block-end: calc(var(--at) * 1%);
+  border-block-end: 1px solid var(--border);
+}
+
+.score-chart__tick {
+  position: absolute;
+  inset-inline-start: calc(-1 * var(--score-gutter));
+  inset-block-end: -0.6em;
+  color: var(--text-2);
+  font-size: var(--size-min);
+  font-variant-numeric: tabular-nums;
+}
+
+.score-chart__bars,
+.score-chart__names {
+  display: grid;
+  grid-template-columns: repeat(var(--count), minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.score-chart__bars {
+  position: relative;
+  block-size: 100%;
+}
+
+.score-chart__names {
+  padding-inline-start: var(--score-gutter);
+}
+
+.score-chart__column {
+  position: relative;
+  min-width: 0;
+}
+
+.score-chart__hit {
+  position: relative;
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  min-block-size: var(--target-min);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: none;
+  cursor: pointer;
+}
+
+.score-chart__hit:focus-visible {
+  outline: 3px solid var(--amber);
+  outline-offset: 2px;
+}
+
+.score-chart__bar {
+  position: absolute;
+  inset-block-end: 0;
+  inset-inline-start: 50%;
+  inline-size: min(64px, 70%);
+  block-size: calc(var(--value) * 1%);
+  border-radius: var(--radius-bar) var(--radius-bar) 0 0;
+  background: var(--bar-neutral);
+  transform: translateX(-50%);
+  transform-origin: bottom;
+  animation: score-bar-in 480ms var(--motion-easing) both;
+}
+
+.score-chart__column[data-best='true'] .score-chart__bar {
+  background: var(--green);
+}
+
+.score-chart__column[data-open='true'] .score-chart__bar {
+  filter: brightness(1.08);
+}
+
+.score-chart__value {
+  position: absolute;
+  inset-block-end: min(calc(var(--top) * 1% + 6px), calc(100% - 2px));
+  inset-inline: 0;
+  color: var(--ink);
+  font-size: var(--size-secondary);
+  font-weight: 700;
+  text-align: center;
+}
+
+.score-chart__whisker {
+  position: absolute;
+  inset-block-end: calc(var(--low) * 1%);
+  inset-inline-start: calc(50% - 1px);
+  inline-size: 2px;
+  block-size: calc((var(--high) - var(--low)) * 1%);
+  background: color-mix(in srgb, var(--ink) 70%, transparent);
+}
+
+.score-chart__whisker::before,
+.score-chart__whisker::after {
+  content: '';
+  position: absolute;
+  inset-inline-start: -5px;
+  inline-size: 12px;
+  block-size: 2px;
+  background: inherit;
+}
+
+.score-chart__whisker::before {
+  inset-block-start: 0;
+}
+
+.score-chart__whisker::after {
+  inset-block-end: 0;
+}
+
+.score-chart__tip {
+  position: absolute;
+  z-index: 2;
+  inset-block-start: 0;
+  inset-inline-start: 50%;
+  display: grid;
+  gap: 2px;
+  inline-size: max-content;
+  max-inline-size: min(240px, 70vw);
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-panel);
+  background: var(--card);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--ink) 14%, transparent);
+  font-size: var(--size-secondary);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.score-chart__column[data-edge='start'] .score-chart__tip {
+  inset-inline-start: 0;
+  transform: none;
+}
+
+.score-chart__column[data-edge='end'] .score-chart__tip {
+  inset-inline: auto 0;
+  transform: none;
+}
+
+.score-chart__tip-name {
+  font-weight: 700;
+}
+
+.score-chart__names li {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  text-align: center;
+}
+
+.score-chart__name {
+  font-size: var(--size-secondary);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.score-chart__now {
+  color: var(--text-2);
+  font-size: var(--size-min);
+}
+
+@keyframes score-bar-in {
+  from {
+    transform: translateX(-50%) scaleY(0);
+  }
+
+  to {
+    transform: translateX(-50%) scaleY(1);
+  }
+}
+
+@media (max-width: 640px) {
+  .score-chart {
+    --score-gutter: 28px;
+    --score-plot: 170px;
+  }
+
+  .score-chart__bars,
+  .score-chart__names {
+    gap: 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .score-chart__bar {
+    animation: none;
+  }
+}
+
 .crop-fit {
   display: grid;
   gap: 8px;
+}
+
+.fit-cells {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(8.5rem, 100%), 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (max-width: 640px) {
+  .fit-cells {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.fit-cell {
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: var(--radius-panel);
+  background: var(--ground);
+}
+
+.fit-cell__label {
+  color: var(--text-2);
+  font-size: var(--size-secondary);
+}
+
+.fit-cell__status {
+  font-weight: 600;
+}
+
+.fit-cell[data-status='fits'] .fit-cell__status {
+  color: var(--green);
+}
+
+.fit-cell[data-status='strained'] {
+  background: var(--amber-tint);
+}
+
+.fit-cell[data-status='strained'] .fit-cell__status,
+.fit-cell[data-status='strained'] .fit-cell__label {
+  color: var(--on-amber-tint);
+}
+
+.fit-cell[data-status='does_not_fit'] .fit-cell__status {
+  color: var(--alert);
+}
+
+.fit-cell[data-status='unknown'] .fit-cell__status {
+  color: var(--text-2);
+}
+
+.fit-cell__value {
+  font-size: var(--size-secondary);
+}
+
+.crop-fit__why > summary {
+  display: flex;
+  align-items: center;
+  width: fit-content;
+  min-height: var(--target-min);
+  color: var(--green);
+  font-size: var(--size-secondary);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.crop-fit__why[open] > summary {
+  margin-block-end: 6px;
 }
 
 .crop-fit__check {

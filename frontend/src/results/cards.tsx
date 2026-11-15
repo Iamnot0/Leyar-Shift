@@ -16,6 +16,7 @@ import { deltaScale } from '../lib/charts';
 import { allFigures, describeResolution, sharedSource, tallyEvidence } from '../lib/evidence';
 import { MONTHS, formatValue, joinList, monthSpanWords, numberWord, sentenceCase } from '../lib/format';
 import { OwnFiguresControl } from './OwnFiguresControl';
+import { ScoreChart } from './ScoreChart';
 import { alternativesOf, bestOf, byRank, byWeight, cameOutBest, currentOf, doubtSentence, nameInSentence, physicalWords, reasonSentence, scoreOf, shortName, switchClosing, verdictOf } from './reading';
 
 const whole = (value: number) => Math.round(value);
@@ -224,24 +225,38 @@ function RotationDetail({ rotation, onChangeRotation, onConfirmRotation, confirm
                   <strong>{fit.crop_name}</strong>
                 </p>
                 {(fit.limiting_check || fit.failure) && <p className="secondary">{limitAndFailure(fit, fit.limiting_check && labelOf(meta.crop_fit_checks, fit.limiting_check), driestYearsOnly)}</p>}
-                <ul className="plain-list">
+                {/* One cell per check: the verdict and its number. The full sentences stay one tap away. */}
+                <ul className="fit-cells">
                   {fit.checks.map((check) => (
-                    <li key={check.check} className="crop-fit__check">
-                      <span>
-                        {labelOf(meta.crop_fit_checks, check.check)}: <strong>{labelOf(meta.crop_fit_statuses, check.status)}</strong>
+                    <li key={check.check} className="fit-cell" data-status={check.status}>
+                      <span className="fit-cell__label">{labelOf(meta.crop_fit_checks, check.check)}</span>
+                      <span className="fit-cell__status">{labelOf(meta.crop_fit_statuses, check.status)}</span>
+                      <span className="fit-cell__value number">
+                        {check.quantity.value !== null ? formatValue(check.quantity.value, check.quantity.unit) : 'No figure'}
                       </span>
-                      <span>{check.text}</span>
-                      <QuantityView quantity={check.quantity} evidence={!fitSource} />
                     </li>
                   ))}
                 </ul>
+                <details className="crop-fit__why">
+                  <summary>Why, for {fit.crop_name.toLowerCase()}</summary>
+                  <ul className="plain-list">
+                    {fit.checks.map((check) => (
+                      <li key={check.check} className="crop-fit__check">
+                        <span>
+                          {labelOf(meta.crop_fit_checks, check.check)}: <strong>{labelOf(meta.crop_fit_statuses, check.status)}</strong>
+                        </span>
+                        <span>{check.text}</span>
+                        <QuantityView quantity={check.quantity} evidence={!fitSource} />
+                      </li>
+                    ))}
+                  </ul>
+                </details>
               </section>
             ))}
           </div>
         )}
         {(checks.length > 0 || rotation.gaps.length > 0) && (
-          <div className="stack stack--tight">
-            <h4>What to check on your own land</h4>
+          <Drawer title="What to check on your own land" count={checks.length + rotation.gaps.length}>
             <ul className="plain-list">
               {checks.map((review) => (
                 <LocalJudgment key={review.topic} review={review} />
@@ -254,7 +269,7 @@ function RotationDetail({ rotation, onChangeRotation, onConfirmRotation, confirm
                 ))}
               </ul>
             )}
-          </div>
+          </Drawer>
         )}
       </div>
     </Drawer>
@@ -271,8 +286,9 @@ interface ScoresProps {
 export function ScoresCard({ analysis, rotationConfirmed, onConfirmRotation, onChangeRotation }: ScoresProps) {
   const rotations = byRank(analysis);
   return (
-    <Card className="wide" title={`How the ${numberWord(rotations.length)} rotations score`}>
+    <Card className="wide" title="Crop Rotation Score">
       <p className="secondary">Each score is out of 100 for what you told us matters. Higher is better.</p>
+      <ScoreChart analysis={analysis} rotations={rotations} />
       <div>
         {rotations.map((rotation) => {
           const { value, low, high, rank } = rotation.overall;
