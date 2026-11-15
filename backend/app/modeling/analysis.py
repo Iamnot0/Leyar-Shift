@@ -8,6 +8,7 @@ from typing import Any, Callable
 from app.adapters import cdl, faostat, gibs, meteomatics, pictures, places, weather
 from app.adapters.base import Allowance, SourceState
 from app.core import config
+from app.core.config import get_settings
 from app.core.provenance import DATASETS, NullReason
 from app.fusion.grid import FieldError, build_grid, read_field
 from app.modeling import crops, engine, rotations, simulate, summary
@@ -24,8 +25,10 @@ def analyze(request: dict[str, Any], ctx: Context, progress: Callable[[str], Non
 
 
 def analysis_id(request: dict[str, Any]) -> str:
-    """One id per request and engine build: a stored result is reused only by the engine that made it."""
-    return engine.request_digest({"request": request, "engine": config.engine_fingerprint()})[:32]
+    """One id per request, engine build and set of connected sources: a stored result is reused only where it would come out the same."""
+    settings = get_settings()
+    connected = sorted(name for name in ("EARTHDATA_TOKEN", "OPENET_API_KEY", "METEOMATICS_USERNAME", "NASS_API_KEY", "OPENROUTER_API_KEY") if settings.key(name))
+    return engine.request_digest({"request": request, "engine": config.engine_fingerprint(), "connected": connected, "imerg": settings.read_imerg})[:32]
 
 
 def check_request(request: dict[str, Any], ctx: Context) -> places.Place:
