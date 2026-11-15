@@ -33,7 +33,7 @@ export function Header({ live, theme, onThemeChange, screen = null, field = null
             Field briefing
           </a>
           <a className="header-nav__link" href="/results" aria-current={screen === 'results' ? 'page' : undefined}>
-            Full comparison
+            Crop rotation
           </a>
         </nav>
       )}

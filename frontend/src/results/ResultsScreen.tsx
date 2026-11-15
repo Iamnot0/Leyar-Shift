@@ -50,7 +50,7 @@ function Failure({ error, scenarioIsNormal, onRetry, onNormal, onOpenSetup }: { 
   );
 }
 
-/** Shown on the full comparison route when no field is set up yet or after a field is removed. */
+/** Shown on the crop rotation route when no field is set up yet or after a field is removed. */
 export function EmptyResultsScreen({ onOpenSetup }: { onOpenSetup: () => void }) {
   return (
     <>
@@ -58,7 +58,7 @@ export function EmptyResultsScreen({ onOpenSetup }: { onOpenSetup: () => void })
         <BackIcon />
         Today on your field
       </a>
-      <h1 className="visually-hidden">The full comparison</h1>
+      <h1 className="visually-hidden">Crop rotation</h1>
       <div className="row row--top">
         <AnswerCard className="wide" pill="Best fit for your field" headline="No field set up yet" smallHeadline>
           <p className="lead">Mark your field and rank your priorities to compare crop rotations side by side across many weather years.</p>
@@ -104,7 +104,7 @@ export function ResultsScreen(props: ResultsScreenProps) {
         <Failure error={run.error} scenarioIsNormal={scenarioIsNormal} onRetry={onRetry} onNormal={() => onScenarioChange({ rainfall: 'normal', temperature: 'normal' })} onOpenSetup={() => onOpenSetup(0)} />
       ) : (
         <>
-          <h1 className="visually-hidden">The full comparison for {headingPlace}</h1>
+          <h1 className="visually-hidden">Crop rotation for {headingPlace}</h1>
           <div className="row row--top">
             <BestFitCard analysis={run.analysis} comparisonId={COMPARISON_ID} onChangePriorities={() => onOpenSetup(2)} />
             <FieldCard field={field} analysis={run.analysis} {...picture} />

@@ -3,7 +3,7 @@ import { photoKeys, photoSrc } from '../content/cropPhotos';
 
 interface CropIllustrationProps {
   cropId: string;
-  size?: 'tile' | 'dialog';
+  size?: 'tile' | 'dialog' | 'chip';
 }
 
 function normalizeCropKey(cropId: string): string {

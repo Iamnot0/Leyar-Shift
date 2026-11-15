@@ -374,61 +374,55 @@ svg {
   padding-block: 8px;
 }
 
-.home-top {
-  display: grid;
-  gap: 20px 40px;
-  align-items: start;
-}
-
-@media (min-width: 960px) {
-  .home-top {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 26rem);
-  }
-}
-
-.examples {
-  display: grid;
-  gap: 8px;
-}
-
-.examples__list {
-  display: grid;
-  gap: 8px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.example-pick {
+.samples {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
-  width: 100%;
-  min-height: var(--target-min);
-  padding: 8px 14px 8px 8px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-panel);
-  background: var(--card);
-  color: inherit;
-  font: inherit;
-  text-align: start;
-  cursor: pointer;
-  transition: border-color var(--motion-duration) var(--motion-easing), background-color var(--motion-duration) var(--motion-easing);
-}
-
-.example-pick:hover {
-  border-color: var(--control-border);
-  background: var(--track);
-}
-
-.example-pick__text {
-  display: grid;
-  gap: 2px;
+  gap: 8px 14px;
   min-width: 0;
 }
 
-.example-pick__text .secondary {
+.samples__label {
+  flex: none;
+  color: var(--text-2);
   font-size: var(--size-secondary);
+  font-weight: 600;
+}
+
+.samples__row {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  min-width: 0;
+}
+
+.sample-pill {
+  flex: none;
+  padding-inline: 6px 16px;
+}
+
+/* On a phone the samples stay one row that scrolls sideways, under their label. */
+@media (max-width: 640px) {
+  .samples {
+    display: grid;
+  }
+
+  .samples__row {
+    flex-wrap: nowrap;
+    padding-block: 2px 6px;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+
+  .samples__row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .sample-pill {
+    scroll-snap-align: start;
+  }
 }
 
 .section-head {
@@ -644,6 +638,12 @@ svg {
 
 .card > * {
   min-width: 0;
+}
+
+.card__aside-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .card__head {
@@ -2896,6 +2896,13 @@ details.drawer[open] > summary::after {
 .crop-pic--photo.crop-pic--tile {
   width: 56px;
   height: 56px;
+}
+
+.crop-pic--chip,
+.crop-pic--photo.crop-pic--chip {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
 }
 
 .crop-credit {

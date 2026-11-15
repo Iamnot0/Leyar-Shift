@@ -12,6 +12,7 @@ import type {
   WaterAvailability,
 } from '../api/types';
 import { labelOf, useMeta } from '../app/context';
+import { ChevronIcon } from '../components/ui/Icons';
 import { Card, CardState, Pill, type PillTone } from '../components/ui/kit';
 import { HEAT_WORDS, RAIN_WORDS } from '../content/copy';
 import { MONTHS } from '../lib/format';
@@ -19,6 +20,7 @@ import { bestOf, byRank, shortName } from '../results/reading';
 import { photoCredit, photoKeys } from '../content/cropPhotos';
 import { CropIllustration } from './CropIllustration';
 
+const COLLAPSED_KEY = 'leyar-suggested-crops-collapsed';
 const photoKeysOf = (items: { id: string }[]) => [...new Set(items.flatMap((item) => photoKeys(item.id).slice(0, 1)))];
 import { REAL_RAIN_MM, degrees } from './words';
 
@@ -876,6 +878,24 @@ export function SuggestedCropsCard({
     requireForage,
     localMarketOnly,
   );
+  const bodyId = useId();
+  const [collapsed, setCollapsed] = useState(() => {
+    try {
+      return window.localStorage.getItem(COLLAPSED_KEY) === '1';
+    } catch {
+      return false;
+    }
+  });
+  const toggleCollapsed = () => {
+    setCollapsed((current) => {
+      try {
+        window.localStorage.setItem(COLLAPSED_KEY, current ? '0' : '1');
+      } catch {
+        // Storage can be blocked; the card still opens and closes.
+      }
+      return !current;
+    });
+  };
   const selectedCrop = selectedId ? items.find((item) => item.id === selectedId) ?? null : null;
 
   return (
@@ -883,14 +903,23 @@ export function SuggestedCropsCard({
       className="suggested-crops"
       title="Suggested crops to grow"
       smallTitle
-      aside={<Pill tone={snapshot.asideTone}>{snapshot.asideLabel}</Pill>}
+      aside={
+        <span className="card__aside-row">
+          <Pill tone={snapshot.asideTone}>{snapshot.asideLabel}</Pill>
+          <button type="button" className="icon-button" aria-expanded={!collapsed} aria-controls={bodyId} onClick={toggleCollapsed}>
+            <ChevronIcon open={!collapsed} />
+            <span className="visually-hidden">{collapsed ? 'Show suggested crops' : 'Hide suggested crops'}</span>
+          </button>
+        </span>
+      }
     >
+      <div id={bodyId} className="suggested-crops__body" hidden={collapsed}>
       {items.length === 0 ? (
         loading ? (
           <CardState kind="loading" title="Checking crops suited to your field…" />
         ) : (
           <CardState kind="empty" title="No crop suggestions ready yet">
-            Run a full comparison or check your water supply settings to see suited crops for your field.
+            Open your crop rotation or check your water supply settings to see suited crops for your field.
           </CardState>
         )
       ) : (
@@ -928,6 +957,7 @@ export function SuggestedCropsCard({
           />
         </>
       )}
+      </div>
     </Card>
   );
 }
