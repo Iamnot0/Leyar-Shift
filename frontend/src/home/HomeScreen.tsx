@@ -8,6 +8,8 @@ import type { Analysis } from '../api/types';
 import { BellIcon } from '../components/ui/Icons';
 import { AnswerCard, Card, CardState, Reminder, ToggleGroup } from '../components/ui/kit';
 import { CropIllustration } from './CropIllustration';
+import { DATA_SOURCES } from '../content/sources';
+import './hero.css';
 import { EXAMPLE_FIELDS, type ExampleField } from '../content/examples';
 import { HEAT_WORDS, RAIN_WORDS } from '../content/copy';
 import { coveredCount } from '../lib/evidence';
@@ -333,30 +335,57 @@ export function EmptyHomeScreen({ onOpenSetup, onOpenExample }: { onOpenSetup: (
 
   return (
     <>
-      <div className="home-top">
-      <header className="page-head">
-        <p className="home-place">{today}</p>
-        <h1 className="page-title">Today on your field</h1>
-        <p className="lead">
-          Set up your field to see live weather, recent rain, soil wetness and rotation advice.
-        </p>
-      </header>
-      {/* Real US farms from the USDA crop map, compared live like any other field. */}
-      <div className="samples" role="group" aria-labelledby="samples-label">
-        <span id="samples-label" className="samples__label">
-          Sample
-        </span>
-        <div className="samples__row">
-          {EXAMPLE_FIELDS.map((example) => (
-            <button key={example.id} type="button" className="field-pill sample-pill" title={example.story} onClick={() => onOpenExample(example)}>
-              <CropIllustration cropId={example.cropId} size="chip" />
-              <span className="field-pill__name">{example.short}</span>
-              <span className="visually-hidden">: {example.place}, {example.story}</span>
+      <section className="hero" aria-labelledby="hero-title">
+        <video className="hero__video" autoPlay muted loop playsInline preload="metadata" poster="/hero/hero.jpg" aria-hidden="true" tabIndex={-1}>
+          <source src="/hero/hero.mp4" type="video/mp4" media="(min-width: 641px)" />
+        </video>
+        <div className="hero__panel">
+          <p className="hero__date">{today}</p>
+          <h1 id="hero-title" className="hero__title">
+            Know what to grow next on your field
+          </h1>
+          <p className="hero__lead">
+            Leyar Shift reads NASA and partner Earth data for your field, tries every rotation that suits it through 500 weather years, and
+            shows the best fit beside what you grow now: water, income and weather risk, in plain words.
+          </p>
+          <p className="hero__lead">Set up your field to see live weather, recent rain, soil wetness and rotation advice.</p>
+          <dl className="hero__facts">
+            <div>
+              <dt>25 years</dt>
+              <dd>of daily NASA weather for any field on Earth</dd>
+            </div>
+            <div>
+              <dt>500</dt>
+              <dd>weather years tried for every rotation</dd>
+            </div>
+            <div>
+              <dt>{DATA_SOURCES.length}</dt>
+              <dd>data sources, each one named</dd>
+            </div>
+          </dl>
+          <div className="hero__actions">
+            <button type="button" className="button button--amber" onClick={onOpenSetup}>
+              Set up your field
             </button>
-          ))}
+          </div>
+          {/* Real US farms from the USDA crop map, compared live like any other field. */}
+          <div className="samples samples--on-deep" role="group" aria-labelledby="samples-label">
+            <span id="samples-label" className="samples__label">
+              Sample
+            </span>
+            <div className="samples__row">
+              {EXAMPLE_FIELDS.map((example) => (
+                <button key={example.id} type="button" className="field-pill sample-pill" title={example.story} onClick={() => onOpenExample(example)}>
+                  <CropIllustration cropId={example.cropId} size="chip" />
+                  <span className="field-pill__name">{example.short}</span>
+                  <span className="visually-hidden">: {example.place}, {example.story}</span>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
-      </div>
-      </div>
+        <p className="hero__credit">Landsat, 1972 to 2011: centre-pivot fields near Dalhart, Texas. NASA Scientific Visualization Studio.</p>
+      </section>
 
       <div className="reading-grid">
         <Card title="Weather today">
