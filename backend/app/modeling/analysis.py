@@ -51,7 +51,7 @@ def _dataset_rows(place: places.Place, lon: float, lat: float, ctx: Context) -> 
         if spec.context_only or (spec.id == "soilgrids" and place.conterminous_us):
             continue
         footprint = period = as_of = None
-        if not spec.configured or (spec.id == "openet" and not ctx.settings.key("OPENET_API_KEY")) or (spec.id == "gpm_imerg" and not ctx.settings.key("EARTHDATA_TOKEN")):
+        if not spec.configured or (spec.id == "openet" and not ctx.settings.key("OPENET_API_KEY")) or (spec.id in ("gpm_imerg", "gldas", "nldas") and not ctx.settings.key("EARTHDATA_TOKEN")):
             state = SourceState.not_configured(spec.id)
         elif spec.scope.value != "global" and not place.conterminous_us:
             state = SourceState.out_of_coverage(spec.id, f"{spec.name} covers the United States only.")

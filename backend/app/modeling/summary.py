@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from typing import Any
 
 import numpy as np
@@ -173,6 +173,17 @@ def field_evidence(b: Builder, current: Evaluated | None = None) -> tuple[list[d
         evidence.append({"id": "green-cover", "kind": "bare_field_window", "title": "Weeks a year with almost nothing green on the field", "summary": text,
                          "quantity": missing("weeks/yr", reason, text, datasets=["sentinel2"]), "series_id": None})
 
+    for source, found in g.soil_water.items():
+        spec = DATASETS[source]
+        month = date(int(found.month[:4]), int(found.month[5:]), 1).strftime("%B %Y")
+        compared = "wetter than" if found.latest > found.high else "drier than" if found.latest < found.low else "close to"
+        evidence.append({"id": f"soil-water-{source}", "kind": "soil_moisture_anomaly", "title": f"Water in {found.layer}, {source.upper()} land model",
+                         "summary": f"In {month} NASA's {source.upper()} model held {found.latest:.0f} mm of water in {found.layer}, {compared} "
+                                    f"the usual {found.usual:.0f} mm for that month over {found.years} earlier years.",
+                         "quantity": quantity(found.latest, "mm", kind=EvidenceKind.MODEL, tier=AccessTier.LIVE, datasets=[source], low=found.low, high=found.high,
+                                              period=(f"{found.first_year}-01-01", f"{found.month}-28"), n_valid=found.years + 1, n_expected=None,
+                                              note=f"The range is the usual one for that month. Each value covers a cell about {spec.native_resolution_m / 1000:g} km across, not your field alone."),
+                         "series_id": None})
     satellite_storage = missing("cm/yr", NullReason.NOT_CONFIGURED, NOT_CONFIGURED_MESSAGES["grace_fo"], datasets=["grace_fo"])
 
     if g.wells is not None:
