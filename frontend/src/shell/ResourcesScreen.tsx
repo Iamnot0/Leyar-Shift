@@ -5,7 +5,6 @@ import { DATA_SOURCES } from '../content/sources';
 
 const METHODS = [
   { name: 'FAO-56 Crop Evapotranspiration', provider: 'Allen and others, FAO Irrigation and Drainage Paper 56, 1998', url: 'https://www.fao.org/4/x0490e/x0490e00.htm' },
-  { name: 'CropSuite v1.0', provider: 'Zabel, Knüttel and Poschlod, Geoscientific Model Development, 2025', url: 'https://gmd.copernicus.org/articles/18/1067/2025/' },
 ];
 
 const nasa = DATA_SOURCES.filter((source) => /NASA/.test(source.provider) || /^NASA/.test(source.name));
