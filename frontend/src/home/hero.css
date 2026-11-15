@@ -135,6 +135,11 @@
   .hero__facts {
     grid-template-columns: minmax(0, 1fr);
   }
+
+  .samples--on-deep .samples__row {
+    flex-wrap: wrap;
+    overflow: visible;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
