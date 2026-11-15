@@ -360,15 +360,15 @@ export function EmptyHomeScreen({ onOpenSetup, onOpenExample }: { onOpenSetup: (
       </div>
 
       <div className="reading-grid">
-        <Card title="Weather today" smallTitle aside={<Pill tone="neutral">No field</Pill>}>
+        <Card title="Weather today">
           <CardState kind="empty" title="No weather measure yet." action={{ label: 'Set up your field', run: onOpenSetup }}>
           </CardState>
         </Card>
-        <Card title="Rain" smallTitle aside={<Pill tone="neutral">No field</Pill>}>
+        <Card title="Rain">
           <CardState kind="empty" title="No rain readings yet">
           </CardState>
         </Card>
-        <Card title="Soil moisture" smallTitle aside={<Pill tone="neutral">No field</Pill>}>
+        <Card title="Soil moisture">
           <CardState kind="empty" title="No soil readings yet">
           </CardState>
         </Card>
@@ -390,7 +390,7 @@ export function EmptyHomeScreen({ onOpenSetup, onOpenExample }: { onOpenSetup: (
               Set up your field to see weather patterns and water needs for this period.
             </CardState>
           </Card>
-          <Card title="Suggested crops for your field" aside={<Pill tone="neutral">No field</Pill>}>
+          <Card title="Suggested crops for your field">
             <CardState kind="empty" title="No crop suggestions yet" action={{ label: 'Set up your field', run: onOpenSetup }}>
               We screen regional crops against your frost-free season, water supply, and equipment once a field is set.
             </CardState>
