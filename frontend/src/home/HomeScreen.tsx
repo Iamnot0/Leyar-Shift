@@ -433,7 +433,7 @@ export function LandingScreen({ hasField, onOpenSetup, onOpenOverview, onOpenExa
   );
 }
 
-const HERO_CREDIT = 'A combine harvesting wheat. Footage: USDA, public domain.';
+const HERO_CREDIT = 'Boro rice harvest, Bangladesh. Video: ZahidTushar, CC BY-SA 4.0, via Wikimedia Commons, cropped.';
 
 const HOW_IT_WORKS: [string, string][] = [
   ['Mark your field', 'Draw it on a satellite map, or type its size and place a square.'],
