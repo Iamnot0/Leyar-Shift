@@ -24,7 +24,7 @@ Leyar Shift helps a farmer choose their next crop rotation. Mark a field on a sa
 ## How it works
 
 <p align="center">
-  <img src="docs/leyar-shift-flow.png" alt="Leyar Shift data flow: farmer answers, weather, soil, prices and water data feed the rotation builder, reference evapotranspiration, field grid, income records and satellite reading; these feed a 6-layer water balance over 500 weather years and evidence checks; scoring weighted by the farmer's priorities produces the best fit, switch or stay, season calendar and data sources." width="100%">
+  <img src=".github/assets/leyar-shift-flow.png" alt="Leyar Shift data flow: farmer answers, weather, soil, prices and water data feed the rotation builder, reference evapotranspiration, field grid, income records and satellite reading; these feed a 6-layer water balance over 500 weather years and evidence checks; scoring weighted by the farmer's priorities produces the best fit, switch or stay, season calendar and data sources." width="100%">
 </p>
 
 The six scores are water needed, soil health, soil washing away, risk from bad weather, breaking pest cycles and income. When two rotations land about equally, Leyar Shift says so instead of naming a winner. When a source has no data for a field, the screen says what is missing and why. No number on screen comes from a language model.
