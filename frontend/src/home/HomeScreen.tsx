@@ -362,7 +362,7 @@ export function EmptyHomeScreen({ onOpenSetup, onOpenExample }: { onOpenSetup: (
       <div className="reading-grid">
         <Card title="Weather today" smallTitle aside={<Pill tone="neutral">No field</Pill>}>
           <CardState kind="empty" title="No field selected yet" action={{ label: 'Set up your field', run: onOpenSetup }}>
-            Mark your field location to load the local forecast and field-work conditions.
+            No weather measure yet.
           </CardState>
         </Card>
         <Card title="Rain" smallTitle aside={<Pill tone="neutral">No field</Pill>}>
