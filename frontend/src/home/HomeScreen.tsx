@@ -319,22 +319,19 @@ interface HomeScreenProps {
 }
 
 /** Shown on the overview dashboard when no field is set up yet or after a field is removed. */
-export function EmptyHomeScreen({ onOpenSetup, onOpenExample }: { onOpenSetup: () => void; onOpenExample: (example: ExampleField) => void }) {
-  const [horizon, setHorizon] = useState<Horizon>(storedHorizon);
+type LandingProps = {
+  hasField: boolean;
+  onOpenSetup: () => void;
+  onOpenOverview: () => void;
+  onOpenExample: (example: ExampleField) => void;
+};
+
+/** The front page: a Landsat time-lapse of centre-pivot fields, what the tool does, and the ways in. */
+export function LandingScreen({ hasField, onOpenSetup, onOpenOverview, onOpenExample }: LandingProps) {
   const [openedOn] = useState(() => new Date().toISOString().slice(0, 10));
   const today = longDate(openedOn);
 
-  const chooseHorizon = (next: Horizon) => {
-    setHorizon(next);
-    try {
-      window.localStorage.setItem(HORIZON_KEY, next);
-    } catch {
-      // Storage can be blocked.
-    }
-  };
-
   return (
-    <>
       <section className="hero" aria-labelledby="hero-title">
         <video className="hero__video" autoPlay muted loop playsInline preload="metadata" poster="/hero/hero.jpg" aria-hidden="true" tabIndex={-1}>
           <source src="/hero/hero.mp4" type="video/mp4" media="(min-width: 641px)" />
@@ -364,9 +361,20 @@ export function EmptyHomeScreen({ onOpenSetup, onOpenExample }: { onOpenSetup: (
             </div>
           </dl>
           <div className="hero__actions">
-            <button type="button" className="button button--amber" onClick={onOpenSetup}>
-              Set up your field
-            </button>
+            {hasField ? (
+              <>
+                <button type="button" className="button button--amber" onClick={onOpenOverview}>
+                  Open your field overview
+                </button>
+                <button type="button" className="button button--on-deep" onClick={onOpenSetup}>
+                  Set up another field
+                </button>
+              </>
+            ) : (
+              <button type="button" className="button button--amber" onClick={onOpenSetup}>
+                Set up your field
+              </button>
+            )}
           </div>
           {/* Real US farms from the USDA crop map, compared live like any other field. */}
           <div className="samples samples--on-deep" role="group" aria-labelledby="samples-label">
@@ -384,8 +392,51 @@ export function EmptyHomeScreen({ onOpenSetup, onOpenExample }: { onOpenSetup: (
             </div>
           </div>
         </div>
-        <p className="hero__credit">Landsat, 1972 to 2011: centre-pivot fields near Dalhart, Texas. NASA Scientific Visualization Studio.</p>
+        <p className="hero__credit">Centre-pivot irrigation over a green field. Footage: USDA NRCS, public domain.</p>
       </section>
+  );
+}
+
+export function EmptyHomeScreen({ onOpenSetup, onOpenExample }: { onOpenSetup: () => void; onOpenExample: (example: ExampleField) => void }) {
+  const [horizon, setHorizon] = useState<Horizon>(storedHorizon);
+  const [openedOn] = useState(() => new Date().toISOString().slice(0, 10));
+  const today = longDate(openedOn);
+
+  const chooseHorizon = (next: Horizon) => {
+    setHorizon(next);
+    try {
+      window.localStorage.setItem(HORIZON_KEY, next);
+    } catch {
+      // Storage can be blocked.
+    }
+  };
+
+  return (
+    <>
+      <div className="home-top">
+      <header className="page-head">
+        <p className="home-place">{today}</p>
+        <h1 className="page-title">Today on your field</h1>
+        <p className="lead">
+          Set up your field to see live weather, recent rain, soil wetness and rotation advice.
+        </p>
+      </header>
+      {/* Real US farms from the USDA crop map, compared live like any other field. */}
+      <div className="samples" role="group" aria-labelledby="samples-label">
+        <span id="samples-label" className="samples__label">
+          Sample
+        </span>
+        <div className="samples__row">
+          {EXAMPLE_FIELDS.map((example) => (
+            <button key={example.id} type="button" className="field-pill sample-pill" title={example.story} onClick={() => onOpenExample(example)}>
+              <CropIllustration cropId={example.cropId} size="chip" />
+              <span className="field-pill__name">{example.short}</span>
+              <span className="visually-hidden">: {example.place}, {example.story}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+      </div>
 
       <div className="reading-grid">
         <Card title="Weather today">

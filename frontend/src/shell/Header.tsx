@@ -1,3 +1,4 @@
+import type { Route } from '../app/route';
 import { MapPinIcon, MoonIcon, SunIcon, SwitchIcon } from '../components/ui/Icons';
 import type { ThemeName } from '../styles/tokens.generated';
 import { Logo } from './Logo';
@@ -9,7 +10,7 @@ interface HeaderProps {
   theme: ThemeName;
   onThemeChange: (theme: ThemeName) => void;
   /** Active dashboard screen, when a field is set up. */
-  screen?: 'home' | 'results' | null;
+  screen?: Route['screen'] | null;
   /** The field in use, once there is one. */
   field?: { name: string; areaHa: string } | null;
   onChangeField?: () => void;
@@ -30,8 +31,8 @@ export function Header({ live, theme, onThemeChange, screen = null, field = null
       )}
       {onChangeField && (
         <nav className="header-nav" aria-label="Views">
-          <a className="header-nav__link" href="/" aria-current={screen === 'home' ? 'page' : undefined}>
-            Field briefing
+          <a className="header-nav__link" href="/overview" aria-current={screen === 'overview' ? 'page' : undefined}>
+            Overview
           </a>
           <a className="header-nav__link" href="/results" aria-current={screen === 'results' ? 'page' : undefined}>
             Crop rotation
@@ -61,7 +62,7 @@ export function Header({ live, theme, onThemeChange, screen = null, field = null
             type="button"
             className="field-pill field-pill--setup"
             title="Set up your field"
-            aria-current={screen === null ? 'page' : undefined}
+            aria-current={screen === 'setup' ? 'page' : undefined}
             onClick={onChangeField}
           >
             <span className="field-pill__pin" aria-hidden="true">

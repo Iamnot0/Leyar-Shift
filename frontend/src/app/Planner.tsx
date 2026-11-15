@@ -7,7 +7,7 @@ import { HEAT_WORDS, RAIN_WORDS } from '../content/copy';
 import type { ExampleField } from '../content/examples';
 import { formatHectares } from '../lib/format';
 import { areaHa, centroid } from '../lib/geo';
-import { EmptyHomeScreen, HomeScreen } from '../home/HomeScreen';
+import { EmptyHomeScreen, HomeScreen, LandingScreen } from '../home/HomeScreen';
 import { EmptyResultsScreen, ResultsScreen } from '../results/ResultsScreen';
 import type { CropsState, HistoryState, RotationAnswer } from '../setup/RotationQuestion';
 import { SetupScreen } from '../setup/SetupScreen';
@@ -303,7 +303,7 @@ export function Planner({ client, theme, notices, onThemeChange }: PlannerProps)
 
   return (
     <AnalysisContext value={scope}>
-      <Header live={reachable} theme={theme} onThemeChange={onThemeChange} screen={screen === 'setup' || screen === 'resources' ? null : screen} field={headerField} onChangeField={() => navigate({ screen: 'setup', step: 0 })} />
+      <Header live={reachable} theme={theme} onThemeChange={onThemeChange} screen={screen} field={headerField} onChangeField={() => navigate({ screen: 'setup', step: 0 })} />
       <main id="content" className="page" tabIndex={-1}>
         {notices}
         {screen === 'setup' ? (
@@ -332,6 +332,13 @@ export function Planner({ client, theme, notices, onThemeChange }: PlannerProps)
             datasets={run.status === 'done' ? run.analysis.datasets : coverage.status === 'ready' ? coverage.coverage.datasets : null}
           />
         ) : screen === 'home' ? (
+          <LandingScreen
+            hasField={plan !== null}
+            onOpenSetup={() => navigate({ screen: 'setup', step: 0 })}
+            onOpenOverview={() => navigate({ screen: 'overview' })}
+            onOpenExample={openExample}
+          />
+        ) : screen === 'overview' ? (
           plan ? (
             <HomeScreen key={JSON.stringify(plan.field.geometry)} client={client} plan={plan} run={run} onRetry={() => runWith({})} />
           ) : (

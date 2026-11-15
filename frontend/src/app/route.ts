@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
 import { SETUP_STEPS } from '../content/copy';
 
-export type Route = { screen: 'home' } | { screen: 'results' } | { screen: 'resources' } | { screen: 'setup'; step: number };
+export type Route = { screen: 'home' } | { screen: 'overview' } | { screen: 'results' } | { screen: 'resources' } | { screen: 'setup'; step: number };
 
 const STEP_COUNT = SETUP_STEPS.length;
 const ROUTE_CHANGE = 'leyar:route';
 
 function parse(path: string): Route {
   const [, screen, detail] = path.split('/');
+  if (screen === 'overview') return { screen: 'overview' };
   if (screen === 'results') return { screen: 'results' };
   if (screen === 'resources') return { screen: 'resources' };
   if (screen === 'setup') {
@@ -20,11 +21,12 @@ function parse(path: string): Route {
 export function hrefOf(route: Route): string {
   if (route.screen === 'setup') return `/setup/${route.step + 1}`;
   if (route.screen === 'resources') return '/resources';
+  if (route.screen === 'overview') return '/overview';
   return route.screen === 'results' ? '/results' : '/';
 }
 
 function isAppPath(path: string): boolean {
-  return path === '/' || path === '/results' || path === '/resources' || /^\/setup\/\d+$/.test(path);
+  return path === '/' || path === '/overview' || path === '/results' || path === '/resources' || /^\/setup\/\d+$/.test(path);
 }
 
 function go(path: string): void {

@@ -82,6 +82,10 @@
   color: var(--on-deep-2);
 }
 
+.samples--on-deep .sample-pill {
+  color: var(--ink);
+}
+
 .hero__credit {
   position: absolute;
   inset-inline-end: 12px;
