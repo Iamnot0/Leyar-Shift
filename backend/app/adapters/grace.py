@@ -14,7 +14,7 @@ from pathlib import Path
 import numpy as np
 import rasterio
 
-from app.adapters.base import Fetcher, FetchError, SourceState
+from app.adapters.base import Fetcher, FetchError, SourceState, make_room
 from app.adapters.groundwater import theil_sen
 
 COLLECTION = "TELLUS_GRAC-GRFO_MASCON_CRI_GRID_RL06.3_V4"
@@ -47,6 +47,8 @@ def _local_copy(fetcher: Fetcher, token: str, name: str, url: str) -> Path:
     with _LOCK:
         if not path.exists():
             content = fetcher._fetch("GET", url, None, None, {"Authorization": f"Bearer {token}"}, timeout=180, attempts=2)
+            if not make_room(fetcher.cache_dir.parent, len(content)):
+                raise FetchError("no room on disk for the GRACE file")
             path.parent.mkdir(parents=True, exist_ok=True)
             temporary = path.with_suffix(".part")
             temporary.write_bytes(content)

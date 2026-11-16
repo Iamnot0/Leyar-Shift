@@ -10,6 +10,7 @@ import re
 import io
 import json
 import os
+import shutil
 import threading
 import time
 from dataclasses import dataclass, field
@@ -114,6 +115,34 @@ class Allowance:
                 return False
             self.records.put(key, {"used": used + 1, "limit": self.limit})
             return True
+
+
+# The serverless runtime reinstalls its packages into the same /tmp when a process restarts, so the cache stays bounded.
+CACHE_BUDGET_BYTES = 160 * 2**20
+
+
+def make_room(root: Path, incoming: int, budget: int = CACHE_BUDGET_BYTES) -> bool:
+    """Evict the oldest cached files under `root`, large source files last, until `incoming` more bytes fit the budget."""
+    if incoming > budget:
+        return False
+    entries = []
+    for path in root.rglob("*"):
+        try:
+            if path.is_file():
+                stat = path.stat()
+                entries.append((path.suffix == ".nc", stat.st_mtime, stat.st_size, path))
+        except OSError:
+            continue
+    used = sum(size for _, _, size, _ in entries)
+    for _, _, size, path in sorted(entries, key=lambda entry: entry[:2]):
+        if used + incoming <= budget:
+            break
+        try:
+            path.unlink()
+            used -= size
+        except OSError:
+            continue
+    return used + incoming <= budget
 
 
 @dataclass
@@ -231,6 +260,8 @@ class Fetcher:
 
     def _store(self, body_path: Path, meta_path: Path, content: bytes, meta: dict[str, Any]) -> None:
         with self._lock:
+            if not make_room(self.cache_dir.parent, len(content) + 4096):
+                return
             body_path.parent.mkdir(parents=True, exist_ok=True)
             for path, data in ((body_path, content), (meta_path, json.dumps(meta, indent=1).encode())):
                 temporary = path.with_suffix(path.suffix + f".{os.getpid()}.tmp")
