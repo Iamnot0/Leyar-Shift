@@ -750,7 +750,7 @@ export function SetupScreen(props: SetupScreenProps) {
               Type a size to place a square in the middle of the map. With a field marked, the box shows its size, and a new size resizes it.
             </p>
             <div className="input-row">
-              <input id={`${ids}-size`} type="number" inputMode="decimal" min={MIN_FIELD_HA} max={MAX_FIELD_HA} step="0.5" value={sizeText} aria-describedby={`${ids}-size-help`} onChange={(event) => resizeShape(event.target.value)} onBlur={() => setTypedHa(null)} />
+              <input id={`${ids}-size`} type="number" inputMode="decimal" min={MIN_FIELD_HA} max={MAX_FIELD_HA} step="0.5" value={sizeText} aria-describedby={`${ids}-size-help`} onChange={(event) => resizeShape(event.target.value)} onBlur={() => corners.length >= 3 && setTypedHa(null)} />
               <span>hectares</span>
               <button type="submit" className="button">
                 Place square
