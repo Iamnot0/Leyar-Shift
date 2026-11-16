@@ -3946,6 +3946,12 @@ details.drawer[open] > summary::after {
   margin: 0;
 }
 
+/* The two links wrap as a pair, so neither is left alone on a line. */
+.site-footer__links {
+  display: inline-flex;
+  gap: 16px;
+}
+
 .site-footer__link {
   display: inline-flex;
   align-items: center;

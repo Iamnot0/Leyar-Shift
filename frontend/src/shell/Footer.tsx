@@ -10,12 +10,14 @@ export function Footer({ theme }: { theme: ThemeName }) {
       </a>
       <p className="site-footer__middle">
         <span>Powered by OptimusTechnica</span>
-        <a className="site-footer__link" href="/resources">
-          Resources
-        </a>
-        <a className="site-footer__link" href="https://github.com/Iamnot0/Leyar-Shift" target="_blank" rel="noreferrer">
-          GitHub
-        </a>
+        <span className="site-footer__links">
+          <a className="site-footer__link" href="/resources">
+            Resources
+          </a>
+          <a className="site-footer__link" href="https://github.com/Iamnot0/Leyar-Shift" target="_blank" rel="noreferrer">
+            GitHub
+          </a>
+        </span>
       </p>
       <p className="site-footer__event">NASA Space Apps Challenge 2026</p>
     </footer>
