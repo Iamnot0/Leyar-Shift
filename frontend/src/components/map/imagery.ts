@@ -101,7 +101,15 @@ function toPicture(layer: ContextLayer, detail: ContextLayer | undefined): MapPi
  */
 export function picturesFrom(contextLayers: ContextLayer[]): MapPicture[] {
   const wholes = contextLayers.filter((layer) => layer.kind === 'picture' && layer.detail_of === null);
-  return [...wholes.map((layer) => toPicture(layer, contextLayers.find((candidate) => candidate.detail_of === layer.id))), ESRI_WORLD_IMAGERY];
+  return [...wholes.map((layer) => toPicture(layer, cachedDetail(contextLayers.find((candidate) => candidate.detail_of === layer.id)))), ESRI_WORLD_IMAGERY];
+}
+
+/**
+ * A finer layer the server renders tile by tile on request (`{bbox-epsg-3857}`) times out under load and
+ * leaves patches of the coarser picture across the field, so only pre-rendered detail is drawn.
+ */
+function cachedDetail(layer: ContextLayer | undefined): ContextLayer | undefined {
+  return layer && !layer.url_template.includes('{bbox-epsg-3857}') ? layer : undefined;
 }
 
 /** Before the backend has checked a field, the scopes that apply are judged from the place alone. */

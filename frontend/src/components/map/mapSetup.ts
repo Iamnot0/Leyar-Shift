@@ -63,8 +63,11 @@ interface RasterSpec {
 const MIN_WORKING_ZOOM = 18;
 const MAP_TILE_SIZE = 512;
 
-/** The map zoom at which a layer's deepest tiles are shown one image pixel to one screen pixel. */
-const nativeZoom = (spec: RasterSpec) => spec.maxzoom - Math.log2(MAP_TILE_SIZE / spec.tileSize);
+/** Tiles are asked for one zoom deeper on a high-density screen, so one image pixel lands on one device pixel. */
+const screenDensity = () => Math.min(2, Math.max(1, Math.round(window.devicePixelRatio || 1)));
+
+/** The map zoom at which a layer's deepest tiles are shown one image pixel to one device pixel. */
+const nativeZoom = (spec: RasterSpec) => spec.maxzoom - Math.log2((MAP_TILE_SIZE * screenDensity()) / spec.tileSize);
 
 /** Bottom to top: the backdrop, the picture, then the picture's finer detail. */
 function rasterStack(picture: MapPicture | null, backdrop: MapPicture | null): RasterSpec[] {
@@ -95,7 +98,7 @@ export function syncImagery(map: MapLibreMap, picture: MapPicture | null, backdr
     if (map.getSource(spec.id)) {
       map.moveLayer(spec.id, firstOverlay);
     } else {
-      map.addSource(spec.id, { type: 'raster', tiles: [spec.tiles], tileSize: spec.tileSize, minzoom: spec.minzoom, maxzoom: spec.maxzoom });
+      map.addSource(spec.id, { type: 'raster', tiles: [spec.tiles], tileSize: spec.tileSize / screenDensity(), minzoom: spec.minzoom, maxzoom: spec.maxzoom });
       map.addLayer({ id: spec.id, type: 'raster', source: spec.id }, firstOverlay);
     }
   }

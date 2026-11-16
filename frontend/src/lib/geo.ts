@@ -94,6 +94,15 @@ export function cornersOf(polygon: Polygon): LngLat[] {
   return (isClosed(ring) ? ring.slice(0, -1) : ring).map(([lng, lat]): LngLat => [lng, lat]);
 }
 
+/** The same shape grown or shrunk about its centre to the given area, so a typed size keeps the outline the farmer drew. */
+export function scaleRingTo(corners: LngLat[], hectares: number): LngLat[] {
+  const current = ringAreaHa(corners);
+  if (current <= 0) return corners;
+  const factor = Math.sqrt(hectares / current);
+  const [cx, cy] = ringCentroid(corners);
+  return corners.map(([lng, lat]) => [cx + (lng - cx) * factor, cy + (lat - cy) * factor]);
+}
+
 /** A square of the given area centred on a point, for farmers who would rather type a size than draw. */
 export function squareAround(centre: LngLat, hectares: number): Polygon {
   const half = Math.sqrt(hectares * SQUARE_METRES_PER_HECTARE) / 2;

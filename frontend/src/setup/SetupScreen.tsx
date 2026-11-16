@@ -16,7 +16,7 @@ import { SourceList } from '../components/ui/SourceList';
 import { coveredCount } from '../lib/evidence';
 import { FIELD_PROBLEM_COPY, NEXT_STEP_WORDS, PRIORITY_WORDS, SETUP_STEPS, SETUP_TITLES, WATER_OPTIONS } from '../content/copy';
 import { formatHectares, formatNumber, numberWord, sentenceCase } from '../lib/format';
-import { MAX_FIELD_HA, MIN_FIELD_HA, boundsOf, cornersOf, fieldProblem, polygonFromCorners, ringAreaHa, ringCentroid, squareAround, type LngLat } from '../lib/geo';
+import { MAX_FIELD_HA, MIN_FIELD_HA, boundsOf, cornersOf, fieldProblem, polygonFromCorners, ringAreaHa, ringCentroid, scaleRingTo, squareAround, type LngLat } from '../lib/geo';
 import type { PictureProps } from '../results/FieldCard';
 import { deriveFieldRequirements } from './fieldEquipment';
 import { RotationQuestion, type CropsState, type HistoryState, type RotationAnswer, type RotationQuestionHandle } from './RotationQuestion';
@@ -74,9 +74,9 @@ export function SetupScreen(props: SetupScreenProps) {
   const [selected, setSelected] = useState<number | null>(null);
   const [view, setView] = useState<MapView | null>(() => (startCorners.length >= 3 ? { bounds: boundsOf(polygonFromCorners(startCorners)) } : null));
   const [mapCentre, setMapCentre] = useState<LngLat>([0, 20]);
-  const [squareHa, setSquareHa] = useState('');
+  // What the farmer is typing in the size box; null shows the area of the shape on the map.
+  const [typedHa, setTypedHa] = useState<string | null>(null);
   /** Where the square was last placed. While set, changing the size redraws it at once. */
-  const [squareCentre, setSquareCentre] = useState<LngLat | null>(null);
   const [countryCode, setCountryCode] = useState('');
   const [stateName, setStateName] = useState('');
   const [customState, setCustomState] = useState(false);
@@ -292,18 +292,22 @@ export function SetupScreen(props: SetupScreenProps) {
     const label = manualNameRef.current ? name : (offlineCityCountry(centre[1], centre[0]) ?? pickedPlaceLabel ?? (dropdownPlace || cleanPlaceName(name) || ''));
     if (!manualNameRef.current && label) setPickedPlaceLabel(label);
     replaceShape(cornersOf(squareAround(centre, size)), label, true);
-    setSquareCentre(centre);
     return true;
   };
 
+  const sizeText = typedHa ?? (corners.length >= 3 ? String(Math.round(ringAreaHa(corners) * 10) / 10) : '');
+
   const placeSquare = (event: FormEvent) => {
     event.preventDefault();
-    if (!drawSquare(mapCentre, squareHa)) setErrors({ field: `Type a field size between ${MIN_FIELD_HA} and ${formatNumber(MAX_FIELD_HA)} hectares.` });
+    if (drawSquare(mapCentre, sizeText)) setTypedHa(null);
+    else setErrors({ field: `Type a field size between ${MIN_FIELD_HA} and ${formatNumber(MAX_FIELD_HA)} hectares.` });
   };
 
-  const resizeSquare = (text: string) => {
-    setSquareHa(text);
-    if (squareCentre) drawSquare(squareCentre, text);
+  // A typed size resizes the shape already on the map about its centre; with nothing marked, Place square uses it.
+  const resizeShape = (text: string) => {
+    setTypedHa(text);
+    const size = Number(text);
+    if (corners.length >= 3 && Number.isFinite(size) && size >= MIN_FIELD_HA && size <= MAX_FIELD_HA) setCorners(scaleRingTo(corners, size));
   };
 
   const removeCorner = (index: number) => {
@@ -708,10 +712,7 @@ export function SetupScreen(props: SetupScreenProps) {
               type="button"
               className="button"
               disabled={corners.length === 0}
-              onClick={() => {
-                setSquareCentre(null);
-                replaceShape([], name);
-              }}
+              onClick={() => replaceShape([], name)}
             >
               Start over
             </button>
@@ -746,10 +747,10 @@ export function SetupScreen(props: SetupScreenProps) {
           <form className="field" onSubmit={placeSquare}>
             <label htmlFor={`${ids}-size`}>Don’t want to draw it?</label>
             <p id={`${ids}-size-help`} className="caption">
-              Type the field size and we’ll place a square in the middle of the map.
+              Type a size to place a square in the middle of the map. With a field marked, the box shows its size, and a new size resizes it.
             </p>
             <div className="input-row">
-              <input id={`${ids}-size`} type="number" inputMode="decimal" min={MIN_FIELD_HA} max={MAX_FIELD_HA} step="0.5" value={squareHa} aria-describedby={`${ids}-size-help`} onChange={(event) => resizeSquare(event.target.value)} />
+              <input id={`${ids}-size`} type="number" inputMode="decimal" min={MIN_FIELD_HA} max={MAX_FIELD_HA} step="0.5" value={sizeText} aria-describedby={`${ids}-size-help`} onChange={(event) => resizeShape(event.target.value)} onBlur={() => setTypedHa(null)} />
               <span>hectares</span>
               <button type="submit" className="button">
                 Place square
